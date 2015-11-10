@@ -1,0 +1,5 @@
+*.xls
+*.Rproj
+*.xlsx
+*.csv
+.Rproj.user*
