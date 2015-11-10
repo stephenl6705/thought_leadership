@@ -1,4 +1,7 @@
 
+userId <- "langestrst01"
+passWd <- "Devt0314"
+
 Rdir <- "~/PROJECTS/Thought Leadership/TL_Data"
 
 source(file.path(Rdir,"libraries.R"))
@@ -58,6 +61,11 @@ rd_CCI <- function(filename,nrRows,nrCols) {
   infile
 }
 
-cci1 <- rd_CCI("Q3 2015 CCI AP REGION.xls",nrRows = 10000, nrCols = 16)
+fileURL <- "https://intranet.nielsen.com/company/news/newsletters/Consumer%20Confidence%20Concerns%20and%20Spending%20Library/Q3%202015%20CCI%20AP%20REGION.xls"
+fileOut <- "Q3 2015 CCI AP REGION.xls"
+bindat <- getBinaryURL(fileURL,userpwd=paste(userId,":",passWd,sep=""))
+writeBin(bindat,paste(datain,"/",fileOut,,sep=""))
+cci1 <- rd_CCI(fileOut,nrRows = 10000, nrCols = 16)
+
 head(cci1,n=5)
 write.csv(cci1,paste(datain,"/cci1.csv",sep=""),row.names=F)
