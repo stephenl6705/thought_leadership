@@ -8,12 +8,14 @@ source(file.path(Rdir,"libraries.R"))
 
 datain <- "~/PROJECTS/Thought Leadership"
 
-setwd(datain)
+fileCCIRoot <- "https://intranet.nielsen.com/company/news/newsletters/Consumer%20Confidence%20Concerns%20and%20Spending%20Library/"
 
 rd_CCI <- function(filename,nrRows,nrCols) {
   
   #filename <- "Q3 2015 CCI AP REGION.xls"; nrRows <- 10000; nrCols <- 16
   #rm(filename,infile,dataIn,rowstart,rowend,jobnr,date,table,index,base,question,question_sub,r,nrRows,nrCols);
+  
+  #setwd(paste(datain,"/Files CCI/",sep=""))
   
   dataIn <- loadWorkbook(filename)
   infile = readWorksheet(dataIn, sheet = getSheets(dataIn)[1],useCachedValues=FALSE,
@@ -61,11 +63,54 @@ rd_CCI <- function(filename,nrRows,nrCols) {
   infile
 }
 
-fileURL <- "https://intranet.nielsen.com/company/news/newsletters/Consumer%20Confidence%20Concerns%20and%20Spending%20Library/Q3%202015%20CCI%20AP%20REGION.xls"
-fileOut <- "Q3 2015 CCI AP REGION.xls"
-bindat <- getBinaryURL(fileURL,userpwd=paste(userId,":",passWd,sep=""))
-writeBin(bindat,paste(datain,"/",fileOut,,sep=""))
+downloadCCI <- function(subdir,read=F) {
+  setwd(paste(datain,"/Files CCI/",subdir,sep=""))
+  for (y in 2011:2015) {
+    for (q in 1:4) {
+      if (!(y==2015 & q==4)) {
+        if (subdir == "AP") {
+          if (y==2011 & q==1) {
+            fileOut <- paste("Q",q," ",y," CCI - ",subdir," REGION.xls",sep="")
+          } else if (y==2011 & (q==3|q==4)) {
+            fileOut <- paste("Q",q," ",y," CCI RESULTS ",subdir," REGION.xls",sep="")
+          } else {
+            fileOut <- paste("Q",q," ",y," CCI ",subdir," REGION.xls",sep="")
+          }
+        } else if (subdir == "SEA") {
+          if ((y==2014 & q==4)|(y==2015 & q==2)|(y==2015 & q==3)) {
+            fileOut <- paste("Q",q," ",y," CCI ",subdir," REGION.xls",sep="")
+          }
+        } else {
+          if (y==2015 & q==3) {
+            fileOut <- "Q3 2015 CCI RESULTS BY COUNTRY with Morocco.xls"
+          } else if (y==2011 & q==1) {
+            fileOut <- paste("Q",q," ",y," CCI - RESULTS BY COUNTRY.xls",sep="")
+          } else if (y==2012 & q==1) {
+            fileOut <- paste("Q",q," ",y," CCI RESLUTS BY COUNTRY.xls",sep="")
+          } else if (y==2012 & q==3) {
+            fileOut <- paste("Q",q," ",y," CCI RESULTS BY COUNTRY REVISED FOR FF Q21.xls",sep="")
+          } else {
+            fileOut <- paste("Q",q," ",y," CCI RESULTS BY COUNTRY.xls",sep="")
+          }
+        }
+        if (read==F) {
+          fileURL <- paste(fileCCIRoot,gsub(" ", "%20", fileOut),sep="")
+          bindat <- getBinaryURL(fileURL,userpwd=paste(userId,":",passWd,sep=""))
+          writeBin(bindat,fileOut)
+        } else if (read==T) {
+          cci1 <- rd_CCI(fileOut,nrRows = 10000, nrCols = 16)
+        }
+      }
+    }
+  }
+}
+
+downloadCCI("AP")
+downloadCCI("SEA")
+downloadCCI("GLOBAL")
+
 cci1 <- rd_CCI(fileOut,nrRows = 10000, nrCols = 16)
 
 head(cci1,n=5)
+
 write.csv(cci1,paste(datain,"/cci1.csv",sep=""),row.names=F)
