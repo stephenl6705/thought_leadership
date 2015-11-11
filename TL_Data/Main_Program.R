@@ -37,10 +37,9 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
     question <- infile[5,"Col1"]
     question_sub <- infile[6,"Col1"]
     infile <- infile[!is.na(infile$Col2),]
-    infile <- infile[is.na(infile$Col1),]
+    rowend <- as.numeric(rows[length(rownames(infile))])
     infile <- infile[grepl("Total",infile$Col2)|grepl("Global.Avg",infile$Col2),]
     rowstart <- as.numeric(rownames(infile[1,]))
-    rowend <- as.numeric(rows[length(rownames(infile))])
     infile = readWorksheet(dataIn, sheet = sheets[sheetNr],useCachedValues=FALSE,
                            startRow=rowstart, endRow=rowend, startCol=1, endCol=nrCols, header=TRUE)
     names(infile)[1] <- "Response"
@@ -155,6 +154,23 @@ getFileGLOBAL <- function(year,quarter) {
   fileOut
 }
 
+getFileREGION <- function(year,quarter) {
+  
+  fileOut <- ""; subdir <- "REGION"
+  
+  if (year==2015 & quarter==3) {
+    fileOut <- "Q3 2015 CCI RESULTS BY REGION with Morocco.xls"
+  } else if (year==2011 & quarter==1) {
+    fileOut <- "Q1 2011 CCI - Regional Results.xls"
+  } else if (year==2012 & quarter==3) {
+    fileOut <- "Q3 2012 CCI RESULTS BY REGION REVISED FOR FF Q21.xls"
+  } else {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY REGION.xls",sep="")
+  }
+  
+  fileOut
+}
+
 downloadCCI <- function(subdir,read=F) {
   #subdir <- "AP"; read <- T
   #rm(subdir,read,cciOut,y,q,fileOut,fileURL,bindat,temp)
@@ -171,6 +187,8 @@ downloadCCI <- function(subdir,read=F) {
           fileOut <- getFileAP(y,q)
         } else if (subdir == "SEA") {
           fileOut <- getFileSEA(y,q)
+        } else if (subdir == "REGION") {
+          fileOut <- getFileREGION(y,q)
         } else {
           fileOut <- getFileGLOBAL(y,q)
         }
@@ -198,7 +216,17 @@ downloadCCI <- function(subdir,read=F) {
 cciOutAP <- downloadCCI("AP",read=T)
 cciOutSEA <- downloadCCI("SEA",read=T)
 cciOutGLOBAL <- downloadCCI("GLOBAL",read=T)
-
 cciOut <- rbind.fill(cciOutAP,cciOutSEA,cciOutGLOBAL)
+cciOut[is.na(cciOut$question_sub),"question_sub"] <- "None"
+nrow(cciOut)
+
+cciOutREGION <- downloadCCI("REGION",read=T)
+cciOutREGION[is.na(cciOutREGION$question_sub),"question_sub"] <- "None"
+nrow(cciOutREGION)
+
+cciOutTOTAL <- merge(cciOut,cciOutREGION,by=c("year","quarter","category","question","question_sub","Response","base"),all.x=TRUE)
+nrow(cciOutTOTAL)
+
 
 write.csv(cciOut,paste(datain,"/Files OUTPUT/cciOut.csv",sep=""),row.names=F)
+write.csv(cciOutTOTAL,paste(datain,"/Files OUTPUT/cciOutTOTAL.csv",sep=""),row.names=F)
