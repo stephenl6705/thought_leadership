@@ -31,6 +31,7 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
   infile = readWorksheet(dataIn, sheet = getSheets(dataIn)[1],useCachedValues=FALSE,
                          startRow=rowstart, endRow=rowend, startCol=1, endCol=nrCols, header=TRUE)
   names(infile)[1] <- "Response"
+  names(infile)[names(infile)=="Global.Avg"] <- "Total"
   names(infile)[names(infile)=="Indonesia..ID."] <- "ID"
   names(infile)[names(infile)=="Malaysia..MY."] <- "MY"
   names(infile)[names(infile)=="Philippines..PH."] <- "PH"
@@ -72,7 +73,7 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
 }
 
 downloadCCI <- function(subdir,read=F) {
-  #subdir <- "AP"; read <- T
+  #subdir <- "GLOBAL"; read <- T
   #rm(subdir,read,cciOut,y,q,fileOut,fileURL,bindat)
   setwd(paste(datain,"/Files CCI/",subdir,sep=""))
   cciOut <- ""
@@ -84,8 +85,9 @@ downloadCCI <- function(subdir,read=F) {
     nrCols <- 8
   }
   for (y in 2011:2015) {
+    #y <- 2013
     for (q in 1:4) {
-      #y <- 2011; q <- 4
+      #q <- 2
       fileOut <- ""
       if (!(y==2015 & q==4)) {
         if (subdir == "AP") {
@@ -122,15 +124,30 @@ downloadCCI <- function(subdir,read=F) {
           writeBin(bindat,fileOut)
         } else if (read==T & !(fileOut == "")) {
           if (is.data.frame(cciOut)) {
-            cciOut <- rbind.fill(cciOut,rd_CCI(fileOut,subdir,nrRows = 10000, nrCols))
+            temp <- rd_CCI(fileOut,subdir,nrRows = 10000, nrCols)
+            temp$quarter <- paste("Q",q,sep="")
+            temp <- temp[c(ncol(temp),1:ncol(temp)-1)]
+            temp$year <- y
+            temp <- temp[c(ncol(temp),1:ncol(temp)-1)]
+            temp$sourceFile <- fileOut
+            temp <- temp[c(ncol(temp),1:ncol(temp)-1)]
+            cciOut <- rbind.fill(cciOut,temp)
           } else {
             cciOut <- rd_CCI(fileOut,subdir,nrRows = 10000, nrCols)
+            cciOut$quarter <- paste("Q",q,sep="")
+            cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
+            cciOut$year <- y
+            cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
+            cciOut$sourceFile <- fileOut
+            cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
           }
         }
       }
-      #head(cciOut[9:length(cciOut)])
     }
+    #head(cciOut[9:length(cciOut)])
   }
+  cciOut$region <- subdir
+  cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
   cciOut
 }
 
@@ -138,10 +155,6 @@ cciOutAP <- downloadCCI("AP",read=T)
 cciOutSEA <- downloadCCI("SEA",read=T)
 cciOutGLOBAL <- downloadCCI("GLOBAL",read=T)
 
-cciOutAP$source <- "AP"
-cciOutAP <- cciOutAP[c(ncol(cciOutAP),1:ncol(cciOutAP)-1)]
-cciOutSEA$source <- "SEA"
-cciOutSEA <- cciOutSEA[c(ncol(cciOutSEA),1:ncol(cciOutSEA)-1)]
-cciOut <- rbind.fill(cciOutAP,cciOutSEA)
+cciOut <- rbind.fill(cciOutAP,cciOutSEA,cciOutGLOBAL)
 
 write.csv(cciOut,paste(datain,"/Files OUTPUT/cciOut.csv",sep=""),row.names=F)
