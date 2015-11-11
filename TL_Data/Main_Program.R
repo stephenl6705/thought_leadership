@@ -72,51 +72,82 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
   infile
 }
 
+addCols <- function (infile,sourceFile,year,quarter) {
+  infile$quarter <- paste("Q",quarter,sep="")
+  infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
+  infile$year <- year
+  infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
+  infile$sourceFile <- sourceFile
+  infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
+  infile
+}
+
+getFileAP <- function(year,quarter) {
+  
+  fileOut <- ""; subdir <- "AP"
+  
+  if (year==2011 & quarter==1) {
+    fileOut <- paste("Q",quarter," ",year," CCI - ",subdir," REGION.xls",sep="")
+  } else if (year==2011 & quarter==3) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS ",subdir," REGION.xls",sep="")
+  } else if (year==2011 & quarter==4) {
+    fileOut <- "Q4 2011 CCI_Asia Pacific Region.xls"
+  } else if (year==2015 & quarter==1) {
+  } else {
+    fileOut <- paste("Q",quarter," ",year," CCI ",subdir," REGION.xls",sep="")
+  }
+  
+    fileOut
+}
+
+getFileSEA <- function(year,quarter) {
+  
+  fileOut <- ""; subdir <- "SEA"
+  
+  if ((year==2014 & quarter==4)|(year==2015 & quarter==2)|(year==2015 & quarter==3)) {
+    fileOut <- paste("Q",quarter," ",year," CCI ",subdir," REGION.xls",sep="")
+  }
+  
+  fileOut
+}
+
+getFileGLOBAL <- function(year,quarter) {
+  
+  fileOut <- ""; subdir <- "GLOBAL"
+  
+  if (year==2015 & quarter==3) {
+    fileOut <- "Q3 2015 CCI RESULTS BY COUNTRY with Morocco.xls"
+  } else if (year==2011 & quarter==1) {
+    fileOut <- paste("Q",quarter," ",year," CCI - RESULTS BY COUNTRY.xls",sep="")
+  } else if (year==2012 & quarter==1) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESLUTS BY COUNTRY.xls",sep="")
+  } else if (year==2012 & quarter==3) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY COUNTRY REVISED FOR FF Q21.xls",sep="")
+  } else {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY COUNTRY.xls",sep="")
+  }
+  
+  fileOut
+}
+
 downloadCCI <- function(subdir,read=F) {
-  #subdir <- "GLOBAL"; read <- T
+  #subdir <- "AP"; read <- T
   #rm(subdir,read,cciOut,y,q,fileOut,fileURL,bindat)
   setwd(paste(datain,"/Files CCI/",subdir,sep=""))
   cciOut <- ""
-  if (subdir =="GLOBAL") {
-    nrCols <- 62
-  } else if (subdir =="AP") {
-    nrCols <- 16
-  } else {
-    nrCols <- 8
-  }
+  nrRows <- 10000; nrCols <- 62
   for (y in 2011:2015) {
-    #y <- 2013
+    #y <- 2011
     for (q in 1:4) {
-      #q <- 2
+      #q <- 1
       fileOut <- ""
       if (!(y==2015 & q==4)) {
         if (subdir == "AP") {
-          if (y==2011 & q==1) {
-            fileOut <- paste("Q",q," ",y," CCI - ",subdir," REGION.xls",sep="")
-          } else if (y==2011 & q==3) {
-            fileOut <- paste("Q",q," ",y," CCI RESULTS ",subdir," REGION.xls",sep="")
-          } else if (y==2011 & q==4) {
-            fileOut <- "Q4 2011 CCI_Asia Pacific Region.xls"
-          } else if (y==2015 & q==1) {
-          } else {
-            fileOut <- paste("Q",q," ",y," CCI ",subdir," REGION.xls",sep="")
-          }
+          fileOut <- getFileAP(y,q)
         } else if (subdir == "SEA") {
-          if ((y==2014 & q==4)|(y==2015 & q==2)|(y==2015 & q==3)) {
-            fileOut <- paste("Q",q," ",y," CCI ",subdir," REGION.xls",sep="")
-          }
+          fileOut <- getFileSEA(y,q)
         } else {
-          if (y==2015 & q==3) {
-            fileOut <- "Q3 2015 CCI RESULTS BY COUNTRY with Morocco.xls"
-          } else if (y==2011 & q==1) {
-            fileOut <- paste("Q",q," ",y," CCI - RESULTS BY COUNTRY.xls",sep="")
-          } else if (y==2012 & q==1) {
-            fileOut <- paste("Q",q," ",y," CCI RESLUTS BY COUNTRY.xls",sep="")
-          } else if (y==2012 & q==3) {
-            fileOut <- paste("Q",q," ",y," CCI RESULTS BY COUNTRY REVISED FOR FF Q21.xls",sep="")
-          } else {
-            fileOut <- paste("Q",q," ",y," CCI RESULTS BY COUNTRY.xls",sep="")
-          }
+          fileOut <- getFileGLOBAL(y,q)
         }
         if (read==F) {
           fileURL <- paste(fileCCIRoot,gsub(" ", "%20", fileOut),sep="")
@@ -124,27 +155,18 @@ downloadCCI <- function(subdir,read=F) {
           writeBin(bindat,fileOut)
         } else if (read==T & !(fileOut == "")) {
           if (is.data.frame(cciOut)) {
-            temp <- rd_CCI(fileOut,subdir,nrRows = 10000, nrCols)
-            temp$quarter <- paste("Q",q,sep="")
-            temp <- temp[c(ncol(temp),1:ncol(temp)-1)]
-            temp$year <- y
-            temp <- temp[c(ncol(temp),1:ncol(temp)-1)]
-            temp$sourceFile <- fileOut
-            temp <- temp[c(ncol(temp),1:ncol(temp)-1)]
+            temp <- rd_CCI(fileOut,subdir,nrRows, nrCols)
+            temp <- addCols(temp,fileOut,y,q)
             cciOut <- rbind.fill(cciOut,temp)
           } else {
-            cciOut <- rd_CCI(fileOut,subdir,nrRows = 10000, nrCols)
-            cciOut$quarter <- paste("Q",q,sep="")
-            cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
-            cciOut$year <- y
-            cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
-            cciOut$sourceFile <- fileOut
-            cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
+            cciOut <- rd_CCI(fileOut,subdir,nrRows, nrCols)
+            cciOut <- addCols(cciOut,fileOut,y,q)
           }
         }
       }
     }
     #head(cciOut[9:length(cciOut)])
+    head(cciOut)
   }
   cciOut$region <- subdir
   cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
