@@ -247,4 +247,46 @@ rm(dupes)
 cciOutTOTAL <- merge(cciOut,cciOutREGION,by=c("year","quarter","category","question","question_sub","Response","base"),all.x=TRUE)
 nrow(cciOutTOTAL)
 
+cciOutTOTAL <- addCol(cciOutTOTAL,"stat","Response")
+cciOutTOTAL <- cciOutTOTAL[c(2:6,1,7:length(cciOutTOTAL))]
+cciOutTOTAL[grepl("Base",cciOutTOTAL$Response),"stat"] <- "summary"
+cciOutTOTAL[grepl("^Sum$",cciOutTOTAL$Response),"stat"] <- "summary"
+cciOutTOTAL[grepl("^S.D.$",cciOutTOTAL$Response),"stat"] <- "summary"
+cciOutTOTAL[grepl("^Top 2 Box",cciOutTOTAL$Response),"stat"] <- "summary"
+cciOutTOTAL[grepl("^Bottom 2 Box",cciOutTOTAL$Response),"stat"] <- "summary"
+cciOutTOTAL[grepl("^Mean$",cciOutTOTAL$Response),"stat"] <- "summary"
+
+#formatCols <- function() {
+  
+  cciOutTOTAL$year <- factor(cciOutTOTAL$year)
+  cciOutTOTAL$quarter <- factor(cciOutTOTAL$quarter)
+  cciOutTOTAL$category <- factor(cciOutTOTAL$category)
+  cciOutTOTAL$question <- factor(cciOutTOTAL$question)
+  cciOutTOTAL$question_sub <- factor(cciOutTOTAL$question_sub)
+  cciOutTOTAL$stat <- factor(cciOutTOTAL$stat)
+  cciOutTOTAL$Response <- factor(cciOutTOTAL$Response)
+  cciOutTOTAL$base <- factor(cciOutTOTAL$base)
+  cciOutTOTAL$region.x <- factor(cciOutTOTAL$region.x)
+  cciOutTOTAL$region.y <- factor(cciOutTOTAL$region.y)
+  cciOutTOTAL$sourceFile.x <- factor(cciOutTOTAL$sourceFile.x)
+  cciOutTOTAL$sourceFile.y <- factor(cciOutTOTAL$sourceFile.y)
+  cciOutTOTAL$project.x <- factor(cciOutTOTAL$project.x)
+  cciOutTOTAL$project.y <- factor(cciOutTOTAL$project.y)
+  cciOutTOTAL$jobnr.x <- factor(cciOutTOTAL$jobnr.x)
+  cciOutTOTAL$jobnr.y <- factor(cciOutTOTAL$jobnr.y)
+  cciOutTOTAL$table.x <- factor(cciOutTOTAL$table.x)
+  cciOutTOTAL$table.y <- factor(cciOutTOTAL$table.y)
+  
+  for (i in 15:77) {
+    cciOutTOTAL[,i] <- as.numeric(cciOutTOTAL[,i])
+  }
+  for (i in 84:91) {
+    cciOutTOTAL[,i] <- as.numeric(cciOutTOTAL[,i])
+  }
+  
+  #cciOutTOTAL$date.x <- as.Date(cciOutTOTAL$date.x)
+  str(cciOutTOTAL)
+  
+}
+
 write.csv(cciOutTOTAL,paste(datain,"/Files OUTPUT/cciOutTOTAL.csv",sep=""),row.names=F)
