@@ -10,9 +10,15 @@ datain <- "~/PROJECTS/Thought Leadership"
 
 fileCCIRoot <- "https://intranet.nielsen.com/company/news/newsletters/Consumer%20Confidence%20Concerns%20and%20Spending%20Library/"
 
+addCol <- function(infile,name,value) {
+  infile[,name] <- value
+  infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
+  infile
+}
+
 rd_CCI <- function(filename,subdir,nrRows,nrCols) {
   
-  #filename <- "Q3 2013 CCI AP REGION.xls"; nrRows <- 10000; nrCols <- 62; subdir <- "AP"
+  #filename <- "Q1 2011 CCI - Regional Results.xls"; nrRows <- 10000; nrCols <- 62; subdir <- "REGION"
   #rm(filename,subdir,infile,dataIn,rowstart,rowend,jobnr,date,table,base,question,question_sub,r,nrRows,nrCols,sheets,sheetNr,category);
   
   setwd(paste(datain,"/Files CCI/",subdir,sep=""))
@@ -25,17 +31,26 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
   
   for (sheetNr in 1:length(sheets)) {
     
-    #sheetNr <- 6
+    #sheetNr <- 1
     
     infile = readWorksheet(dataIn, sheet = sheets[sheetNr],useCachedValues=FALSE,
                            startRow=1, endRow=nrRows, startCol=1, endCol=nrCols, header=F)
     if (sheetNr == 1) {category <- "CCI"} else {category <- sheets[sheetNr]}
+    infile <- infile[!is.na(infile$Col1),]
     project <- infile[1,"Col1"]
     jobnr <- infile[2,"Col1"]
     date <- infile[3,"Col1"]
     table <- infile[4,"Col1"]
     question <- infile[5,"Col1"]
-    question_sub <- infile[6,"Col1"]
+    if (grepl("Base",infile[6,"Col1"])) {
+      question_sub <- "None"
+      base <- infile[6,"Col1"];
+    } else {
+      question_sub <- infile[6,"Col1"]
+      base <- infile[7,"Col1"];
+    }
+    infile = readWorksheet(dataIn, sheet = sheets[sheetNr],useCachedValues=FALSE,
+                           startRow=1, endRow=nrRows, startCol=1, endCol=nrCols, header=F)
     infile <- infile[!is.na(infile$Col2),]
     rowend <- as.numeric(rows[length(rownames(infile))])
     infile <- infile[grepl("Total",infile$Col2)|grepl("Global.Avg",infile$Col2),]
@@ -52,37 +67,35 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
     names(infile)[names(infile)=="Vietnam..VN."] <- "VN"
     infile <- infile[,names(infile)[!grepl("Col",names(infile))]]
     infile <- infile[!is.na(infile$Response),]
-    infile$question <- question
-    infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
-    infile$question_sub <- question_sub
-    infile <- infile[c(1,ncol(infile),3:ncol(infile)-1)]
-    infile$base <- infile[1,"Response"]
-    infile <- infile[c(1:3,ncol(infile),5:ncol(infile)-1)]
-    question <- infile[1,"question"]
-    question_sub <- infile[1,"question_sub"]
-    base <- infile[1,"base"]
+    
+    infile <- addCol(infile,"base",base)
+    infile <- addCol(infile,"question_sub",question_sub)
+    infile <- addCol(infile,"question",question)
+    infile <- addCol(infile,"table",table)
+    infile <- addCol(infile,"date",date)
+    
     for (r in 1:nrow(infile)) {
-      if (grepl("Base:",infile[r,"Response"]) & !grepl("wtd",infile[r,"Response"])) {
+      if (grepl("Base:",infile[r,"Response"]) & !grepl("wtd",tolower(infile[r,"Response"]))) {
         base <- infile[r,"Response"]
-      } else if (grepl("^Q[1,2,3,4,5,6]",infile[r,"Response"])) {
-        question <- infile[r,"Response"]
-        if (grepl("-",infile[r+1,"Response"])) {
-          question_sub <- infile[r+1,"Response"]
-        } else {question_sub <- "None"}
+      } else if (grepl("Table [123456789]",infile[r,"Response"])) {
+        date <- infile[r-1,"Response"]
+        table <- infile[r,"Response"]
+        question <- infile[r+1,"Response"]
+        if (!grepl("^Base",infile[r+2,"Response"])) {
+          question_sub <- infile[r+2,"Response"]
+        }
       }
+      infile[r,"date"] <- date
+      infile[r,"table"] <- table
       infile[r,"base"] <- base
       infile[r,"question"] <- question
       infile[r,"question_sub"] <- question_sub
     }
-    head(infile)
     infile <- infile[!is.na(infile$Total),]
-    infile$table <- table  ; infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
-    infile$date <- date   ; infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
-    infile$jobnr <- jobnr  ; infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
-    infile$project <- project; infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
 
-    infile$category <- category
-    infile <- infile[c(ncol(infile),1:ncol(infile)-1)]
+    infile <- addCol(infile,"category",category)
+    infile <- addCol(infile,"jobnr",jobnr)
+    infile <- addCol(infile,"project",project)
     
     if (is.data.frame(outfile)) {
       outfile <- rbind.fill(outfile,infile)
@@ -92,6 +105,7 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
     
   }
   
+  outfile <- outfile[!grepl("SUMMARY",outfile$question),]
   outfile
   
 }
@@ -217,16 +231,20 @@ cciOutAP <- downloadCCI("AP",read=T)
 cciOutSEA <- downloadCCI("SEA",read=T)
 cciOutGLOBAL <- downloadCCI("GLOBAL",read=T)
 cciOut <- rbind.fill(cciOutAP,cciOutSEA,cciOutGLOBAL)
-cciOut[is.na(cciOut$question_sub),"question_sub"] <- "None"
 nrow(cciOut)
+write.csv(cciOut,paste(datain,"/Files OUTPUT/cciOut.csv",sep=""),row.names=F)
 
 cciOutREGION <- downloadCCI("REGION",read=T)
-cciOutREGION[is.na(cciOutREGION$question_sub),"question_sub"] <- "None"
 nrow(cciOutREGION)
+dupes <- duplicated(cciOutREGION[,c("region","year","quarter","category","question","question_sub","Response","base","date")])
+nrow(cciOutREGION[dupes,])
+write.csv(dupes,paste(datain,"/Files OUTPUT/dupes.csv",sep=""),row.names=F)
+dupes <- duplicated(cciOutREGION[,c("region","year","quarter","category","question","question_sub","Response","base")])
+cciOutREGION <- cciOutREGION[!dupes, ]
+nrow(cciOutREGION)
+rm(dupes)
 
 cciOutTOTAL <- merge(cciOut,cciOutREGION,by=c("year","quarter","category","question","question_sub","Response","base"),all.x=TRUE)
 nrow(cciOutTOTAL)
 
-
-write.csv(cciOut,paste(datain,"/Files OUTPUT/cciOut.csv",sep=""),row.names=F)
 write.csv(cciOutTOTAL,paste(datain,"/Files OUTPUT/cciOutTOTAL.csv",sep=""),row.names=F)
