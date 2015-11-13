@@ -46,6 +46,7 @@ eiuFile$date.x <- "2015-11-10"
 write.csv(eiuFile,paste(datain,"/Files OUTPUT/eiuOut.csv",sep=""),row.names=F)
 
 cci_eiu_Out <- cciOutTOTAL[cciOutTOTAL$category=="CCI" & cciOutTOTAL$region.x=="GLOBAL",]
+
 cci_eiu_Out <- rbind.fill(cci_eiu_Out,eiuFile)
 cci_eiu_Out[cci_eiu_Out$question_sub=="index by ap","question_sub"] <- "None"
 
@@ -94,6 +95,8 @@ cci_eiu_Out2 <- cci_eiu_Out2[c("year","quarter","region","country","category","q
 
 cci_eiu_Out2 <- cci_eiu_Out2[!is.na(cci_eiu_Out2$value.country),]
 cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.country),"value.country"] <- 0
+cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.region),"value.region"] <- 0
+cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.global),"value.global"] <- 0
 cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.region"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.country"]
 cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.global"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.country"]
 

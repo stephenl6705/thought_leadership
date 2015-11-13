@@ -262,6 +262,8 @@ setupCCI <- function() {
   cciOutSEA <- downloadCCI("SEA",read=T)
   cciOutGLOBAL <- downloadCCI("GLOBAL",read=T)
   cciOut <- rbind.fill(cciOutAP,cciOutSEA,cciOutGLOBAL)
+  cciOut[grepl("index by",cciOut$question_sub),"question_sub"] <- "None"
+  
   #nrow(cciOut)
   #write.csv(cciOut,paste(datain,"/Files OUTPUT/cciOut.csv",sep=""),row.names=F)
   
@@ -273,6 +275,7 @@ setupCCI <- function() {
   #write.csv(dupes,paste(datain,"/Files OUTPUT/dupes.csv",sep=""),row.names=F)
   dupes <- duplicated(cciOutREGION[,c("region","year","quarter","category","question","question_sub","Response","base")])
   cciOutREGION <- cciOutREGION[!dupes, ]
+  cciOutREGION[grepl("index by",cciOutREGION$question_sub),"question_sub"] <- "None"
   #nrow(cciOutREGION)
   #rm(dupes)
   
