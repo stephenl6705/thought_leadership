@@ -83,12 +83,7 @@ cci_eiu_Out2[cci_eiu_Out2$country %in%
 cci_eiu_Out2[cci_eiu_Out2$country %in%
                c("CA","US"),"region"] <- "NA"
 
-head(cci_eiu_Out2[cci_eiu_Out2$region=="NA",])
-
-cci_eiu_Out2$country <- factor(cci_eiu_Out2$country)
-summary(cci_eiu_Out2$country)
-
-cci_eiu_Out2[cci_eiu_Out2$countr=="AP","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="AP","AP"]
+cci_eiu_Out2[cci_eiu_Out2$region=="AP","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="AP","AP"]
 cci_eiu_Out2[cci_eiu_Out2$region=="EU","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="EU","EU"]
 cci_eiu_Out2[cci_eiu_Out2$region=="AME","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="AME","AME"]
 cci_eiu_Out2[cci_eiu_Out2$region=="LA","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="LA","LA"]
@@ -96,6 +91,11 @@ cci_eiu_Out2[cci_eiu_Out2$region=="NA","value.region"] <- cci_eiu_Out2[cci_eiu_O
 
 cci_eiu_Out2 <- cci_eiu_Out2[c("year","quarter","region","country","category","question","question_sub",
                                "stat","response","base","value.country","value.region","value.global")]
+
+cci_eiu_Out2 <- cci_eiu_Out2[!is.na(cci_eiu_Out2$value.country),]
+cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.country),"value.country"] <- 0
+cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.region"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.country"]
+cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.global"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.country"]
 
 write.csv(cci_eiu_Out2,paste(datain,"/Files OUTPUT/cci_eiu_Out2.csv",sep=""),row.names=F)
 
