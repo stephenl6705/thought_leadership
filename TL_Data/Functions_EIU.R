@@ -94,11 +94,11 @@ cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
                                  "stat","response","base","value.country","value.region","value.global")]
   
   cci_eiu_Out2 <- cci_eiu_Out2[!is.na(cci_eiu_Out2$value.country),]
-  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.country),"value.country"] <- 0
-  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.region),"value.region"] <- 0
-  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.global),"value.global"] <- 0
-  cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.region"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.country"]
-  cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.global"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.country"]
+  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.country),"value.country"] <- NA
+  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.region),"value.region"] <- NA
+  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.global),"value.global"] <- NA
+  #cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.region"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.country"]
+  #cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.global"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.country"]
   
   write.csv(cci_eiu_Out2,paste(datain,"/Files OUTPUT/cci_eiu_Out2.csv",sep=""),row.names=F)
   
@@ -110,6 +110,26 @@ setupEIU <- function() {
 
   eiuFile <- eiu_readDate("2015_11_10")
   
-  cci_eiu_Out2 <- cci_eiu_prepData(cciOutTOTAL,eiuFile)
+}
+
+ftime_agg <- function (file,agg_list,order_list,desc_vec,stat_vec) {
+  time_agg <-
+    with(file,
+         aggregate(
+           agg_list
+           ,by=order_list
+           ,FUN=mean
+         )
+    )
   
+  max <- length(desc_vec)
+  for (i in 1:max) {
+    names(time_agg)[i]<-paste(desc_vec[i])
+  }
+  max2 <- length(stat_vec)
+  for (i in 1:max2) {
+    names(time_agg)[max+i]<-paste(stat_vec[i])
+  }
+  time_agg <- time_agg[order(time_agg[1]),]
+  time_agg
 }

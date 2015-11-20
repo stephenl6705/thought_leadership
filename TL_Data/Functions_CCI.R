@@ -290,6 +290,7 @@ setupCCI <- function() {
   cciOutTOTAL[grepl("^Top 2 Box",cciOutTOTAL$Response),"stat"] <- "summary"
   cciOutTOTAL[grepl("^Bottom 2 Box",cciOutTOTAL$Response),"stat"] <- "summary"
   cciOutTOTAL[grepl("^Mean$",cciOutTOTAL$Response),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^Total$",cciOutTOTAL$Response),"stat"] <- "summary"
   
   write.csv(cciOutTOTAL,paste(datain,"/Files OUTPUT/cciOutTOTAL.csv",sep=""),row.names=F)
   

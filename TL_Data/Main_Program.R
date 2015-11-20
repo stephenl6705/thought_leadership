@@ -12,3 +12,5 @@ datain <- "~/PROJECTS/Thought Leadership"
 #setupCCI()
 
 #setupEIU()
+
+#setup_CCI_EIU
