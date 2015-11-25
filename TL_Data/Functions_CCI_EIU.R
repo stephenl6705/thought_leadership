@@ -44,7 +44,7 @@ rank_cci_question <- function(infile,question,rankyear,rankquarter) {
   infile_Q <- infile[grepl(paste(question,".",sep=""),infile$question),]
   infile_Q <- infile_Q[infile_Q$year==rankyear & infile_Q$quarter==rankquarter,]
   question_long <- infile_Q[1,"question"]
-  
+  head(infile_Q)
   infile_Q <- ftime_agg(infile_Q,
                                 agg_list = infile_Q$value.region,
                                 order_list = list(infile_Q$region,infile_Q$response),
@@ -53,11 +53,11 @@ rank_cci_question <- function(infile,question,rankyear,rankquarter) {
   )
   
   temp <- as.data.frame(t(tapply(infile_Q$value.region, list(infile_Q$region,infile_Q$response), max)))
-  temp$order.AME <- rank(temp$AME,ties.method= "first")
-  temp$order.AP <- rank(temp$AP,ties.method= "first")
-  temp$order.EU <- rank(temp$EU,ties.method= "first")
-  temp$order.LA <- rank(temp$LA,ties.method= "first")
-  temp$order.NA <- rank(temp$NA.,ties.method= "first")
+  temp$order.AME <- rank(-temp$AME,ties.method= "first")
+  temp$order.AP <- rank(-temp$AP,ties.method= "first")
+  temp$order.EU <- rank(-temp$EU,ties.method= "first")
+  temp$order.LA <- rank(-temp$LA,ties.method= "first")
+  temp$order.NA <- rank(-temp$NA.,ties.method= "first")
   temp$response <- row.names(temp)
   row.names(temp) <- NULL
   temp <- temp[c("response","order.NA","order.AME","order.AP","order.EU","order.LA")]
@@ -81,7 +81,7 @@ rank_cci_question <- function(infile,question,rankyear,rankquarter) {
 
 rank_cci <- function(infile,rankyear,rankquarter) {
   
-  #infile <- cci_eiu_smart; rankyear <- "2015"; rankquarter <- "Q2"
+  #infile <- cci_eiu_smart; rankyear <- "2015"; rankquarter <- "Q3"
   #rm(infile,rankquarter,rankyear,rankname)
   
   infile<- rank_cci_question(infile,"Q6",rankyear,rankquarter)
@@ -107,13 +107,13 @@ setup_CCI_EIU <- function() {
   
   cci_eiu_smart <- create_cci_eiu_smart(cci_eiu_Out2)
 
-  cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q2")
-  #cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q3")
-  head(cci_eiu_smart)
+  #cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q2")
+  cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q3")
+  
   cci_eiu_smart <- cci_eiu_smart[c("year","quarter","region","country","category",
                                    "question","question_sub","stat","response","base",
                                    "value.country","value.region","value.global",
-                                   "rank2015Q2")]
+                                   "rank2015Q3")]
   
   write.csv(cci_eiu_smart,paste(datain,"/Files OUTPUT/cci_eiu_csuite.csv",sep=""),row.names=F)
   

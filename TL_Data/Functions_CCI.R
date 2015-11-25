@@ -279,6 +279,11 @@ setupCCI <- function() {
   #nrow(cciOutREGION)
   #rm(dupes)
   
+  cciOut[grepl("by ap",cciOut$question_sub),"question_sub"] <- "None"
+  cciOut[grepl("by sea",cciOut$question_sub),"question_sub"] <- "None"
+  cciOut[grepl("by country",cciOut$question_sub),"question_sub"] <- "None"
+  cciOutREGION[grepl("by region",cciOutREGION$question_sub),"question_sub"] <- "None"
+  
   cciOutTOTAL <- merge(cciOut,cciOutREGION,by=c("year","quarter","category","question","question_sub","Response","base"),all.x=TRUE)
   #nrow(cciOutTOTAL)
   
