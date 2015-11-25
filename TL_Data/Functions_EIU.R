@@ -2,7 +2,7 @@
 ################## EIU FUNCTIoNS ############################################
 
 
-eiu_readDate <- function(period) {
+eiu_readData <- function(period) {
   
   setwd(paste(datain,"/Files EIU/",sep=""))
   
@@ -108,7 +108,7 @@ cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
 
 setupEIU <- function() {
 
-  eiuFile <- eiu_readDate("2015_11_10")
+  eiuFile <- eiu_readData("2015_11_10")
   
 }
 

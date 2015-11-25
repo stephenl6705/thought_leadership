@@ -38,8 +38,12 @@ create_cci_eiu_smart <- function(infile) {
 
 rank_cci_question <- function(infile,question,rankyear,rankquarter) {
 
+  #question <- "Q7a"
+  #rm(infile_Q,temp,question,question_long,order_nm)
+  
   infile_Q <- infile[grepl(paste(question,".",sep=""),infile$question),]
   infile_Q <- infile_Q[infile_Q$year==rankyear & infile_Q$quarter==rankquarter,]
+  question_long <- infile_Q[1,"question"]
   
   infile_Q <- ftime_agg(infile_Q,
                                 agg_list = infile_Q$value.region,
@@ -57,24 +61,28 @@ rank_cci_question <- function(infile,question,rankyear,rankquarter) {
   temp$response <- row.names(temp)
   row.names(temp) <- NULL
   temp <- temp[c("response","order.NA","order.AME","order.AP","order.EU","order.LA")]
-  question <- paste("order",question,sep="")
-  temp[,"region"] <- "NA."; temp[,question] <- temp$order.NA
-  tempNA <- temp; tempNA[,"region"] <- "NA."; tempNA[,question] <- tempNA$order.NA
-  tempAME <- temp; tempAME[,"region"] <- "AME"; tempAME[,question] <- tempAME$order.AME
-  tempAP <- temp; tempAP[,"region"] <- "AP"; tempAP[,question] <- tempAP$order.AP
-  tempEU <- temp; tempEU[,"region"] <- "EU"; tempEU[,question] <- tempEU$order.EU
-  tempLA <- temp; tempLA[,"region"] <- "LA"; tempLA[,question] <- tempLA$order.LA
+  order_nm <- paste("order",question,sep="")
+  temp[,"region"] <- "NA."; temp[,order_nm] <- temp$order.NA
+  tempNA <- temp; tempNA[,"region"] <- "NA."; tempNA[,order_nm] <- tempNA$order.NA
+  tempAME <- temp; tempAME[,"region"] <- "AME"; tempAME[,order_nm] <- tempAME$order.AME
+  tempAP <- temp; tempAP[,"region"] <- "AP"; tempAP[,order_nm] <- tempAP$order.AP
+  tempEU <- temp; tempEU[,"region"] <- "EU"; tempEU[,order_nm] <- tempEU$order.EU
+  tempLA <- temp; tempLA[,"region"] <- "LA"; tempLA[,order_nm] <- tempLA$order.LA
   temp <- rbind(tempNA,tempAME,tempAP,tempEU,tempLA)
-  temp <- temp[c("response","region",question)]
+  temp <- temp[c("response","region",order_nm)]
+  temp$question <- question_long
   rm(tempNA,tempAME,tempAP,tempEU,tempLA)
   
-  infile <- merge(infile,temp,by=c("response","region"),all.x=T)
+  infile <- merge(infile,temp,by=c("question","response","region"),all.x=T)
   
-  infile
+  infile  
   
 }
 
 rank_cci <- function(infile,rankyear,rankquarter) {
+  
+  #infile <- cci_eiu_smart; rankyear <- "2015"; rankquarter <- "Q2"
+  #rm(infile,rankquarter,rankyear,rankname)
   
   infile<- rank_cci_question(infile,"Q6",rankyear,rankquarter)
   infile<- rank_cci_question(infile,"Q7a",rankyear,rankquarter)
@@ -99,14 +107,14 @@ setup_CCI_EIU <- function() {
   
   cci_eiu_smart <- create_cci_eiu_smart(cci_eiu_Out2)
 
-  #cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q2")
-  cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q3")
+  cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q2")
+  #cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q3")
   head(cci_eiu_smart)
   cci_eiu_smart <- cci_eiu_smart[c("year","quarter","region","country","category",
                                    "question","question_sub","stat","response","base",
                                    "value.country","value.region","value.global",
-                                   "rank2015Q3")]
+                                   "rank2015Q2")]
   
-  write.csv(cci_eiu_smart,paste(datain,"/Files OUTPUT/cci_eiu_smart.csv",sep=""),row.names=F)
+  write.csv(cci_eiu_smart,paste(datain,"/Files OUTPUT/cci_eiu_csuite.csv",sep=""),row.names=F)
   
 }
