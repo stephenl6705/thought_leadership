@@ -23,22 +23,9 @@ WB_countrySN <- function(infile) {
   
 }
 
-WB_year <- function(infile) {
-  
-  infile$year <- 0
-  
-  for (y in 2011:2015) {
-  
-    infile[grepl(paste(y),infile$variable),"year"] <- y
-    
-  }
-  
-  infile
-  
-}
-
 WB_readData <- function(period) {
   
+  #period <- "2015-12"
   #rm(infile,period,dataIn)
   
   setwd(paste(datain,"/Files Worldbank/",sep=""))
@@ -46,7 +33,7 @@ WB_readData <- function(period) {
   dataIn <- loadWorkbook(paste("Worldbank ",period,".xls",sep=""))
   
   infile = readWorksheet(dataIn, sheet = getSheets(dataIn)[1],useCachedValues=FALSE,
-                         startRow=1, endRow=18000, startCol=1, endCol=9, header=T)
+                         startRow=1, endRow=1000, startCol=1, endCol=54, header=T)
   infile <- infile[!is.na(infile$Country.Name),]
   infile <- WB_countrySN(infile)
   names(infile)[names(infile)=="Series.Code"] <- "question"
@@ -55,7 +42,7 @@ WB_readData <- function(period) {
                  id.vars = c("country","question","question_sub"),
                  measure.vars = names(infile)[grep("YR",names(infile))])
   
-  infile <- WB_year(infile)
+  infile$year <- substr(infile$variable,2,5)
   names(infile)[names(infile)=="value"] <- "value.country"
   infile <- infile[c("year","country","question","question_sub","value.country")]
   infile <- infile[!is.na(infile$question),]

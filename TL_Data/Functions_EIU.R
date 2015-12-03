@@ -3,13 +3,13 @@
 
 
 eiu_readData <- function(period) {
-  
+
   setwd(paste(datain,"/Files EIU/",sep=""))
   
   dataIn <- loadWorkbook(paste("eiu_",period,".xls",sep=""))
   
   infile = readWorksheet(dataIn, sheet = getSheets(dataIn)[1],useCachedValues=FALSE,
-                         startRow=4, endRow=500, startCol=1, endCol=50, header=T)
+                         startRow=4, endRow=500, startCol=1, endCol=102, header=T)
   names(infile)[2] <- "Country_sn"
   names(infile)[4] <- "Series"
   infile <- infile[!is.na(infile$X2015Q2),]
@@ -22,7 +22,6 @@ eiu_readData <- function(period) {
   infile$quarter <- substr(infile$period,6,7)
   infile[infile$Country_sn=="KR","Country_sn"] <- "KO"
   head(infile)
-  head(cciOutTOTAL)
   
   eiuFile <- cast(infile, year + quarter + Series + Series.Title ~ Country_sn, sum)
   eiuFile$category <- "EIU"
@@ -44,8 +43,8 @@ eiu_readData <- function(period) {
 
 setupEIU <- function() {
 
-  eiuFile <- eiu_readData("2015_11_10")
-  
+  eiuFile <- eiu_readData("2015_12_03_Q")
+
 }
 
 ftime_agg <- function (file,agg_list,order_list,desc_vec,stat_vec) {

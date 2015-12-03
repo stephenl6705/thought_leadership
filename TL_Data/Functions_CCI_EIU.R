@@ -195,7 +195,6 @@ setup_CCI_EIU_WB <- function() {
   WBFile2$base <- "Market"
   
   cci_eiu_wb <- rbind.fill(cci_eiu_Out2,WBFile2)
-  tail(cci_eiu_wb)
   
   write.csv(cci_eiu_wb,paste(datain,"/Files OUTPUT/cci_eiu_wb.csv",sep=""),row.names=F)
   
