@@ -4,15 +4,25 @@
 
 eiu_readData <- function(period) {
 
+  #period <- "2015_12_03_Q"
+  #rm(period,dataIn,infile,lastRow)
+  
   setwd(paste(datain,"/Files EIU/",sep=""))
   
   dataIn <- loadWorkbook(paste("eiu_",period,".xls",sep=""))
   
   infile = readWorksheet(dataIn, sheet = getSheets(dataIn)[1],useCachedValues=FALSE,
-                         startRow=4, endRow=500, startCol=1, endCol=102, header=T)
+                         startRow=4, endRow=10000, startCol=1, endCol=102, header=T)
+  names(infile)[4] <- "Series"
+  infile <- infile[!is.na(infile$Series),]
+  lastRow <- as.numeric(row.names(infile[infile$Series=="Notes",])) - 1
+  
+  infile = readWorksheet(dataIn, sheet = getSheets(dataIn)[1],useCachedValues=FALSE,
+                         startRow=4, endRow=lastRow, startCol=1, endCol=102, header=T)
   names(infile)[2] <- "Country_sn"
   names(infile)[4] <- "Series"
-  infile <- infile[!is.na(infile$X2015Q2),]
+  infile <- infile[!is.na(infile$Series),]
+  
   infile <- melt(infile,
                  id.vars = c("Country","Country_sn","Series.Title","Series","Currency","Units"),
                  measure.vars = names(infile)[9:length(names(infile))-2])
@@ -21,8 +31,7 @@ eiu_readData <- function(period) {
   infile$year <- substr(infile$period,2,5)
   infile$quarter <- substr(infile$period,6,7)
   infile[infile$Country_sn=="KR","Country_sn"] <- "KO"
-  head(infile)
-  
+
   eiuFile <- cast(infile, year + quarter + Series + Series.Title ~ Country_sn, sum)
   eiuFile$category <- "EIU"
   names(eiuFile)[names(eiuFile)=="Series"] <- "question"
@@ -35,16 +44,22 @@ eiu_readData <- function(period) {
   eiuFile$jobnr.x <- paste("eiu_",period,sep="")
   eiuFile$date.x <- period
   
-  write.csv(eiuFile,paste(datain,"/Files OUTPUT/eiuOut.csv",sep=""),row.names=F)
-  
   eiuFile
   
 }
 
 setupEIU <- function() {
 
-  eiuFile <- eiu_readData("2015_12_03_Q")
-
+  eiuFileQ <- eiu_readData("2015_12_03_Q")
+  write.csv(eiuFileQ,paste(datain,"/Files OUTPUT/eiuOut_Q.csv",sep=""),row.names=F)
+  
+  eiuFileY <- eiu_readData("2015_12_03_Y")
+  write.csv(eiuFileY,paste(datain,"/Files OUTPUT/eiuOut_Y.csv",sep=""),row.names=F)
+  
+  eiuFile <- rbind.fill(eiuFileQ,eiuFileY)
+  write.csv(eiuFile,paste(datain,"/Files OUTPUT/eiuOut.csv",sep=""),row.names=F)
+  
+  
 }
 
 ftime_agg <- function (file,agg_list,order_list,desc_vec,stat_vec) {
