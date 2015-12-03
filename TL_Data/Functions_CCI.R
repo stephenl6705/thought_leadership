@@ -289,14 +289,46 @@ setupCCI <- function() {
   
   cciOutTOTAL <- addCol(cciOutTOTAL,"stat","Response")
   cciOutTOTAL <- cciOutTOTAL[c(2:6,1,7:length(cciOutTOTAL))]
-  cciOutTOTAL[grepl("^Base",cciOutTOTAL$Response),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^Sum$",cciOutTOTAL$Response),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^S.D.$",cciOutTOTAL$Response),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^Top 2 Box",cciOutTOTAL$Response),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^Bottom 2 Box",cciOutTOTAL$Response),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^Mean$",cciOutTOTAL$Response),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^Total$",cciOutTOTAL$Response),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^BASE",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^SUM$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^S.D.$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^SE$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^TOP 2 BOX$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^BOTTOM 2 BOX$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^MEAN$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^TOTAL$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^MEDIAN$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^SD$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  cciOutTOTAL[grepl("^AVG$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
   
   write.csv(cciOutTOTAL,paste(datain,"/Files OUTPUT/cciOutTOTAL.csv",sep=""),row.names=F)
   
+  cciOutTOTAL_sample <- cciOutTOTAL[c("region.x","stat","year","quarter","question","question_sub","Response",
+                                      "AU","CN","HK","IN","ID","KO","MY","NZ","PH","SG","TW","TH","VN","JP","AP")]
+  
+  cciOutTOTAL_sample <- cciOutTOTAL_sample[cciOutTOTAL_sample$region.x=="GLOBAL",]
+  cciOutTOTAL_sample <- cciOutTOTAL_sample[cciOutTOTAL_sample$stat=="Response",]
+  cciOutTOTAL_sample <- cciOutTOTAL_sample[!cciOutTOTAL_sample$question=="Q69. City /Country",]
+  
+  names(cciOutTOTAL_sample)[names(cciOutTOTAL_sample)=="AP"] <- "AP region"
+  
+  cciOutTOTAL_sample <- cciOutTOTAL_sample[c("year","quarter","question","question_sub","Response",
+                                             "AU","CN","HK","IN","ID","KO","MY","NZ","PH","SG","TW","TH","VN","JP","AP region")]
+
+  str(cciOutTOTAL_sample)
+  cciOutTOTAL_sample <- melt(cciOutTOTAL_sample,
+                       id.vars = c("year","quarter","question","question_sub","Response"),
+                       measure.vars = names(cciOutTOTAL_sample)[6:length(cciOutTOTAL_sample)])
+  
+  names(cciOutTOTAL_sample)[names(cciOutTOTAL_sample)=="variable"] <- "geography"
+  names(cciOutTOTAL_sample)[names(cciOutTOTAL_sample)=="Response"] <- "response"
+  
+  cciOutTOTAL_sample$value <- gsub("%","",x = cciOutTOTAL_sample$value)
+  cciOutTOTAL_sample$value <- as.numeric(cciOutTOTAL_sample$value)
+  
+  #cciOutTOTAL_sample[cciOutTOTAL_sample$question=="Index. CONSUMER CONFIDENCE INDEX","value"] <-
+  #  cciOutTOTAL_sample[cciOutTOTAL_sample$question=="Index. CONSUMER CONFIDENCE INDEX","value"]/100
+  
+  write.csv(cciOutTOTAL_sample,paste(datain,"/Files OUTPUT/cciOutTOTAL_sample.csv",sep=""),row.names=F)
+
 }

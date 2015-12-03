@@ -1,4 +1,70 @@
 
+################## COMBINING CCI AND EIU  ############################################
+
+cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
+  
+  cci_eiu_Out <- cciInputFile[cciInputFile$category=="CCI" & cciInputFile$region.x=="GLOBAL",]
+  
+  cci_eiu_Out <- rbind.fill(cci_eiu_Out,eiuInputFile)
+  
+  cci_eiu_Out[cci_eiu_Out$question_sub=="index by ap","question_sub"] <- "None"
+  
+  write.csv(cci_eiu_Out,paste(datain,"/Files OUTPUT/cci_eiu_Out.csv",sep=""),row.names=F)
+  
+  cci_eiu_Out2 <- melt(cci_eiu_Out,
+                       id.vars = c("year","quarter","category","question","question_sub","stat","Response","base","region.x",
+                                   "project.x","jobnr.x","date.x","table.x","Total.x",
+                                   "region.y","sourceFile.y","project.y","jobnr.y","date.y","table.y","Total.y",
+                                   "AP","EU","MEAP","LA","NA.","AME","SEA"),
+                       measure.vars = names(cci_eiu_Out)[16:77])
+  
+  names(cci_eiu_Out2)[names(cci_eiu_Out2)=="variable"] <- "country"
+  names(cci_eiu_Out2)[names(cci_eiu_Out2)=="Response"] <- "response"
+  names(cci_eiu_Out2)[names(cci_eiu_Out2)=="value"] <- "value.country"
+  names(cci_eiu_Out2)[names(cci_eiu_Out2)=="Total.x"] <- "value.global"
+  names(cci_eiu_Out2)[names(cci_eiu_Out2)=="region.x"] <- "region"
+  
+  cci_eiu_Out2[cci_eiu_Out2$country == "PERU","country"] <- "PE"
+  
+  cci_eiu_Out2[cci_eiu_Out2$country %in%
+                 c("AU","CN","HK","ID","IN","JP","KO","MY","NZ","PH","SG","TH","TW","VN"),"region"] <- "AP"
+  
+  cci_eiu_Out2[cci_eiu_Out2$country %in%
+                 c("AT","BE","CH","CZ","DE","DK","EE","ES","FI","FR","GB","GR","HR","HU",
+                   "IE","IL","IT","LT","LV","NL","NO","PL","PT","RO","RU","SE","TR","UA",
+                   "BG","SK","RS","SI"),"region"] <- "EU"
+  
+  cci_eiu_Out2[cci_eiu_Out2$country %in%
+                 c("ZA","AE","EG","PK","SA","MO"),"region"] <- "AME"
+  
+  cci_eiu_Out2[cci_eiu_Out2$country %in%
+                 c("BR","MX","AR","CO","CL","VE","PE"),"region"] <- "LA"
+  
+  cci_eiu_Out2[cci_eiu_Out2$country %in%
+                 c("CA","US"),"region"] <- "NA"
+  
+  cci_eiu_Out2[cci_eiu_Out2$region=="AP","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="AP","AP"]
+  cci_eiu_Out2[cci_eiu_Out2$region=="EU","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="EU","EU"]
+  cci_eiu_Out2[cci_eiu_Out2$region=="AME","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="AME","AME"]
+  cci_eiu_Out2[cci_eiu_Out2$region=="LA","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="LA","LA"]
+  cci_eiu_Out2[cci_eiu_Out2$region=="NA","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="NA","NA."]
+  
+  cci_eiu_Out2 <- cci_eiu_Out2[c("year","quarter","region","country","category","question","question_sub",
+                                 "stat","response","base","value.country","value.region","value.global")]
+  
+  cci_eiu_Out2 <- cci_eiu_Out2[!is.na(cci_eiu_Out2$value.country),]
+  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.country),"value.country"] <- NA
+  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.region),"value.region"] <- NA
+  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.global),"value.global"] <- NA
+  #cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.region"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.country"]
+  #cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.global"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.country"]
+  
+  write.csv(cci_eiu_Out2,paste(datain,"/Files OUTPUT/cci_eiu_Out2.csv",sep=""),row.names=F)
+  
+  cci_eiu_Out2
+  
+}
+
 create_cci_eiu_smart <- function(infile) {
 
   cci_eiu_smart <- infile[
@@ -116,5 +182,21 @@ setup_CCI_EIU <- function() {
                                    "rank2015Q3")]
   
   write.csv(cci_eiu_smart,paste(datain,"/Files OUTPUT/cci_eiu_csuite.csv",sep=""),row.names=F)
+  
+}
+
+setup_CCI_EIU_WB <- function() {
+  
+  WBFile2 <- WBFile
+  WBFile2$region <- "AP"
+  WBFile2$category <- "WB"
+  WBFile2$stat <- "Response"
+  WBFile2$response <- "Stat"
+  WBFile2$base <- "Market"
+  
+  cci_eiu_wb <- rbind.fill(cci_eiu_Out2,WBFile2)
+  tail(cci_eiu_wb)
+  
+  write.csv(cci_eiu_wb,paste(datain,"/Files OUTPUT/cci_eiu_wb.csv",sep=""),row.names=F)
   
 }
