@@ -1,5 +1,5 @@
 
-################## CCI FUNCTIoNS ############################################
+################## CCI FUNCTIONS ############################################
 
 addCol <- function(infile,name,value) {
   infile[,name] <- value

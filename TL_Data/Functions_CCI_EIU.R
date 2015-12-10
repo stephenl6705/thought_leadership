@@ -2,8 +2,38 @@
 ################## COMBINING CCI AND EIU  ############################################
 
 cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
+
+  #cciInputFile <- cciOutTOTAL; eiuInputFile <- eiuFile
+  #rm(cciInputFile,eiuInputFile,dupes,cci_eiu_Out)
   
-  cci_eiu_Out <- cciInputFile[cciInputFile$category=="CCI" & cciInputFile$region.x=="GLOBAL",]
+  cciInputFile[cciInputFile$region.x=="GLOBAL","region.x"] <- "1.GLOBAL"
+  cciInputFile[cciInputFile$region.x=="AP","region.x"] <- "2.AP"
+  cciInputFile[cciInputFile$region.x=="SEA","region.x"] <- "3.SEA"
+  
+  cciInputFile <- cciInputFile[order(cciInputFile$region.x,
+                                     cciInputFile$year,cciInputFile$quarter,
+                                     cciInputFile$category,cciInputFile$question,cciInputFile$question_sub,
+                                     cciInputFile$stat,cciInputFile$Response,cciInputFile$base,
+                                     cciInputFile$jobnr.x,cciInputFile$table.x),]
+  
+  dupes <- duplicated(cciInputFile[,c("year","quarter",
+                                      "category","question","question_sub",
+                                      "stat","Response","base","jobnr.x","table.x")])
+
+  #cciInputDupes <- cciInputFile[dupes,]
+  #cciInputDupes <- cciInputDupes[order(cciInputDupes$year,cciInputDupes$quarter,cciInputDupes$category,cciInputDupes$question,
+  #                       cciInputDupes$question_sub,cciInputDupes$stat,cciInputDupes$Response,cciInputDupes$base,
+  #                       cciInputDupes$jobnr.x,cciInputDupes$table.x),]
+  #write.csv(cciInputDupes,paste(datain,"/Files OUTPUT/cciInputDupes.csv",sep=""),row.names=F)
+  
+  cciInputFile <- cciInputFile[!dupes, ]
+  
+  cciInputFile[cciInputFile$region.x=="1.GLOBAL","region.x"] <- "GLOBAL"
+  cciInputFile[cciInputFile$region.x=="2.AP","region.x"] <- "AP"
+  cciInputFile[cciInputFile$region.x=="3.SEA","region.x"] <- "SEA"
+  
+  #cci_eiu_Out <- cciInputFile[cciInputFile$category=="CCI",]
+  cci_eiu_Out <- cciInputFile
   
   cci_eiu_Out <- rbind.fill(cci_eiu_Out,eiuInputFile)
   
@@ -23,6 +53,9 @@ cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
   names(cci_eiu_Out2)[names(cci_eiu_Out2)=="value"] <- "value.country"
   names(cci_eiu_Out2)[names(cci_eiu_Out2)=="Total.x"] <- "value.global"
   names(cci_eiu_Out2)[names(cci_eiu_Out2)=="region.x"] <- "region"
+  
+  #cci_eiu_Out2[cci_eiu_Out2$region=="AP","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="AP","value.global"]
+  cci_eiu_Out2[cci_eiu_Out2$region %in% c("AP","SEA"),"value.global"] <- NA
   
   cci_eiu_Out2[cci_eiu_Out2$country == "PERU","country"] <- "PE"
   
@@ -48,7 +81,7 @@ cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
   cci_eiu_Out2[cci_eiu_Out2$region=="AME","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="AME","AME"]
   cci_eiu_Out2[cci_eiu_Out2$region=="LA","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="LA","LA"]
   cci_eiu_Out2[cci_eiu_Out2$region=="NA","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="NA","NA."]
-  
+
   cci_eiu_Out2 <- cci_eiu_Out2[c("year","quarter","region","country","category","question","question_sub",
                                  "stat","response","base","value.country","value.region","value.global")]
   
@@ -183,6 +216,8 @@ setup_CCI_EIU <- function() {
   
   write.csv(cci_eiu_smart,paste(datain,"/Files OUTPUT/cci_eiu_csuite.csv",sep=""),row.names=F)
   
+  cci_eiu_smart
+  
 }
 
 setup_CCI_EIU_WB <- function() {
@@ -197,5 +232,28 @@ setup_CCI_EIU_WB <- function() {
   cci_eiu_wb <- rbind.fill(cci_eiu_Out2,WBFile2)
   
   write.csv(cci_eiu_wb,paste(datain,"/Files OUTPUT/cci_eiu_wb.csv",sep=""),row.names=F)
+
+  nis_cci_ap <- cci_eiu_wb[cci_eiu_wb$region=="AP" & !(cci_eiu_wb$category %in% c("WB","EIU")),]
+  
+  nis_cci_ap[!(nis_cci_ap$question_sub=="None"),"question"] <- 
+    gsub("_[123456789][0123456789]?","",nis_cci_ap[!(nis_cci_ap$question_sub=="None"),"question"])
+  
+  write.csv(nis_cci_ap,paste(datain,"/Files OUTPUT/NIS AP - CCI.csv",sep=""),row.names=F)
+  
+  nis_cci_ap_2011 <- nis_cci_ap[nis_cci_ap$year=="2011",]
+  nis_cci_ap_2012 <- nis_cci_ap[nis_cci_ap$year=="2012",]
+  nis_cci_ap_2013 <- nis_cci_ap[nis_cci_ap$year=="2013",]
+  nis_cci_ap_2014 <- nis_cci_ap[nis_cci_ap$year=="2014",]
+  nis_cci_ap_2015 <- nis_cci_ap[nis_cci_ap$year=="2015",]
+
+  write.csv(nis_cci_ap_2011,paste(datain,"/Files OUTPUT/NIS AP - CCI 2011.csv",sep=""),row.names=F)
+  write.csv(nis_cci_ap_2012,paste(datain,"/Files OUTPUT/NIS AP - CCI 2012.csv",sep=""),row.names=F)
+  write.csv(nis_cci_ap_2013,paste(datain,"/Files OUTPUT/NIS AP - CCI 2013.csv",sep=""),row.names=F)
+  write.csv(nis_cci_ap_2014,paste(datain,"/Files OUTPUT/NIS AP - CCI 2014.csv",sep=""),row.names=F)
+  write.csv(nis_cci_ap_2015,paste(datain,"/Files OUTPUT/NIS AP - CCI 2015.csv",sep=""),row.names=F)
+  
+  
+  
+  cci_eiu_wb
   
 }
