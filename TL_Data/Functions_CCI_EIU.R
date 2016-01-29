@@ -110,7 +110,9 @@ create_cci_eiu_smart <- function(infile) {
   cci_eiu_smart <- infile[
     (
       infile$question=="DCPI" | infile$question=="DGDP" | infile$response =="Average Index" |
-        grepl("Q7",infile$question) | grepl("Q6[.]",infile$question)
+        grepl("Q7",infile$question) | grepl("Q6[.]",infile$question) |
+        grepl("Q3[.]",infile$question) | grepl("Q4[.]",infile$question) | grepl("Q5[.]",infile$question) |
+        grepl("Q8[.]",infile$question) | grepl("Q9[.]",infile$question)
     )
     &
       (
@@ -193,6 +195,11 @@ rank_cci <- function(infile,rankyear,rankquarter) {
   infile<- rank_cci_question(infile,"Q6",rankyear,rankquarter)
   infile<- rank_cci_question(infile,"Q7a",rankyear,rankquarter)
   infile<- rank_cci_question(infile,"Q7b",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q3",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q4",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q5",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q8",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q9",rankyear,rankquarter)
   
   rankname <- paste("rank",rankyear,rankquarter,sep="")
   
@@ -222,6 +229,12 @@ setup_CCI_EIU <- function() {
                                    "rank2015Q3")]
   
   write.csv(cci_eiu_smart,paste(datain,"/Files OUTPUT/cci_eiu_csuite.csv",sep=""),row.names=F)
+
+  cci_dashboard <- cci_eiu_smart[cci_eiu_smart$category=="CCI" & cci_eiu_smart$region=="AP"
+                                 ,c("year","quarter","country","question","question_sub","response",
+                                    "value.country","value.region","rank2015Q3")]
+
+  write.csv(cci_dashboard,paste(datain,"/Files OUTPUT/cci_dashboard.csv",sep=""),row.names=F)
   
   cci_eiu_smart
   
