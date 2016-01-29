@@ -4,7 +4,7 @@
 cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
 
   #cciInputFile <- cciOutTOTAL; eiuInputFile <- eiuFile
-  #rm(cciInputFile,eiuInputFile,dupes,cci_eiu_Out)
+  #rm(cciInputFile,eiuInputFile,dupes,cci_eiu_Out,cci_eiu_Out2)
   
   cciInputFile[cciInputFile$region.x=="GLOBAL","region.x"] <- "1.GLOBAL"
   cciInputFile[cciInputFile$region.x=="AP","region.x"] <- "2.AP"
@@ -56,7 +56,7 @@ cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
   
   #cci_eiu_Out2[cci_eiu_Out2$region=="AP","value.region"] <- cci_eiu_Out2[cci_eiu_Out2$region=="AP","value.global"]
   cci_eiu_Out2[cci_eiu_Out2$region %in% c("AP","SEA"),"value.global"] <- NA
-  
+
   cci_eiu_Out2[cci_eiu_Out2$country == "PERU","country"] <- "PE"
   
   cci_eiu_Out2[cci_eiu_Out2$country %in%
@@ -85,10 +85,17 @@ cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
   cci_eiu_Out2 <- cci_eiu_Out2[c("year","quarter","region","country","category","question","question_sub",
                                  "stat","response","base","value.country","value.region","value.global")]
   
+  #head(cci_eiu_Out2[
+  #  cci_eiu_Out2$country=="TW" & 
+  #    cci_eiu_Out2$year==2015 & 
+  #    cci_eiu_Out2$stat=="Response" & 
+  #    cci_eiu_Out2$category=="EIU" & 
+  #    cci_eiu_Out2$quarter=="Q3",],n=100)
+  
   cci_eiu_Out2 <- cci_eiu_Out2[!is.na(cci_eiu_Out2$value.country),]
-  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.country),"value.country"] <- NA
-  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.region),"value.region"] <- NA
-  cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.global),"value.global"] <- NA
+  #cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.country),"value.country"] <- NA
+  #cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.region),"value.region"] <- NA
+  #cci_eiu_Out2[grepl("-",cci_eiu_Out2$value.global),"value.global"] <- NA
   #cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.region"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.region),"value.country"]
   #cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.global"] <- cci_eiu_Out2[is.na(cci_eiu_Out2$value.global),"value.country"]
   
@@ -202,7 +209,7 @@ setup_CCI_EIU <- function() {
 
   cci_eiu_Out2 <- cci_eiu_prepData(cciOutTOTAL,eiuFile)
   
-  write.csv(cci_eiu_Out2,paste(datain,"/Files OUTPUT/cci_eiu_Out2.csv",sep=""),row.names=F)
+  #write.csv(cci_eiu_Out2,paste(datain,"/Files OUTPUT/cci_eiu_Out2.csv",sep=""),row.names=F)
   
   cci_eiu_smart <- create_cci_eiu_smart(cci_eiu_Out2)
 
