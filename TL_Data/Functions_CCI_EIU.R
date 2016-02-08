@@ -110,9 +110,7 @@ create_cci_eiu_smart <- function(infile) {
   cci_eiu_smart <- infile[
     (
       infile$question=="DCPI" | infile$question=="DGDP" | infile$response =="Average Index" |
-        grepl("Q7",infile$question) | grepl("Q6[.]",infile$question) |
-        grepl("Q3[.]",infile$question) | grepl("Q4[.]",infile$question) | grepl("Q5[.]",infile$question) |
-        grepl("Q8[.]",infile$question) | grepl("Q9[.]",infile$question)
+        grepl("Q7",infile$question) | grepl("Q6[.]",infile$question)
     )
     &
       (
@@ -144,9 +142,97 @@ create_cci_eiu_smart <- function(infile) {
   
 }
 
+create_cci_dashboard <- function(infile) {
+
+  #infile <- cci_eiu_Out2
+  #rm(infile)
+
+  cci_dashboard <- infile[toupper(infile$category) %in% c("CCI","CONSUMER DEMAND","CORPORATE CITIZENSHIP","CSR"),]
+  cci_dashboard <- cci_dashboard[(cci_dashboard$year %in% c("2011","2012","2013","2014","2015") &
+                             !(cci_dashboard$year == "2015" & cci_dashboard$quarter == "Q4") &
+                             cci_dashboard$stat=="Response"),]
+  
+  cci_dashboard <- cci_dashboard[
+      (toupper(cci_dashboard$category) %in% c("CCI") & (
+          toupper(cci_dashboard$response) =="AVERAGE INDEX" |
+          grepl("Q7",toupper(cci_dashboard$question)) | grepl("Q6[.]",toupper(cci_dashboard$question)) |
+          grepl("Q3[.]",toupper(cci_dashboard$question)) | grepl("Q4[.]",toupper(cci_dashboard$question)) |
+          grepl("Q5[.]",toupper(cci_dashboard$question)) |
+          grepl("Q8[.]",toupper(cci_dashboard$question)) | grepl("Q9[.]",toupper(cci_dashboard$question))
+        )
+      ) |
+      (toupper(cci_dashboard$category) %in% c("CONSUMER DEMAND") & (
+        grepl("Q13[ABC]SUM",toupper(cci_dashboard$question)) | grepl("Q19[ABC]SUM",toupper(cci_dashboard$question))
+        )
+      ) |
+      (toupper(cci_dashboard$category) %in% c("CORPORATE CITIZENSHIP","CSR") & (
+        grepl("Q22",toupper(cci_dashboard$question)) | grepl("Q16",toupper(cci_dashboard$question))
+        )
+      )
+    ,]
+  
+  cci_dashboard[grepl("[Qq]13",cci_dashboard$question),"question"] <- gsub("13", "19", cci_dashboard[grepl("[Qq]13",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("[Qq]19",cci_dashboard$question),"question"] <- gsub("q", "Q", cci_dashboard[grepl("[Qq]19",cci_dashboard$question),"question"])
+  is.na(cci_dashboard$value.region)
+
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_10", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_9", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_8", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_7", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_6", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_5", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_4", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_3", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_2", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+  cci_dashboard[grepl("Q22",cci_dashboard$question),"question"] <- gsub("_1", "", cci_dashboard[grepl("Q22",cci_dashboard$question),"question"])
+
+  cci_dashboard$question_sub <- gsub(" - Businesses do enough to support society", "(R10)   Businesses do enough to support society ", cci_dashboard$question_sub)
+  cci_dashboard$question_sub <- gsub(" - Businesses solve global problems through their regular operations", "(R8)    Businesses solve global problems through their regular operations ", cci_dashboard$question_sub)
+  cci_dashboard$question_sub <- gsub(" - Businesses create global problems through their regular operations", "(R9)    Businesses create global problems through their regular operations ", cci_dashboard$question_sub)
+  cci_dashboard$question_sub <- gsub(" - I am willing to pay extra for products and services that come from companies who have implemented programs that give back to society", "(R4)    I am willing to pay extra for products and services that come from companies who have implemented programs that give back to society ", cci_dashboard$question_sub)
+  cci_dashboard$question_sub <- gsub(" - In the past 6 months, I purchased at least one product or service because I knew that the company had implemented a program to give back to society", "(R11)   In the past 6 months, I purchased at least one product or service because I knew that the company had implemented a program to give back to society", cci_dashboard$question_sub)
+
+  #cci_dashboard_backup <- cci_dashboard
+  #cci_dashboard <- cci_dashboard_backup
+
+  cci_dashboard$category <- gsub("Corporate citizenship", "Corporate Citizenship", cci_dashboard$category)
+  cci_dashboard$category <- gsub("Consumer demand", "Consumer Demand", cci_dashboard$category)
+  
+  cci_dashboard$category <- gsub("Corporate Citizenship", "CSR", cci_dashboard$category)
+  cci_dashboard$question <- gsub("Q22. How much to you agree with the following statements[?]", "Q16. Level of agreement on corporate social responsibility", cci_dashboard$question)
+  #summary(factor(cci_dashboard$category))
+  
+  cci_dashboard_q16 <- cci_dashboard[grepl("Q16",cci_dashboard$question),]
+  cci_dashboard <- cci_dashboard[!grepl("Q16",cci_dashboard$question),]
+  cci_dashboard_q16 <- cci_dashboard_q16[cci_dashboard_q16$response=="Top 2 Box [NET]",]
+  cci_dashboard_q16$response <- cci_dashboard_q16$question_sub; cci_dashboard_q16$question_sub <- "None"
+  cci_dashboard <- rbind(cci_dashboard,cci_dashboard_q16)
+  
+  cci_dashboard[cci_dashboard$region=="NA","region"] <- "NA."
+  
+  cci_dashboard$value.country <- gsub("%","",x = cci_dashboard$value.country)
+  cci_dashboard$value.region <- gsub("%","",x = cci_dashboard$value.region)
+  cci_dashboard$value.global <- gsub("%","",x = cci_dashboard$value.global)
+  
+  cci_dashboard$year <- factor(cci_dashboard$year)
+  cci_dashboard$quarter <- factor(cci_dashboard$quarter)
+  cci_dashboard$region <- factor(cci_dashboard$region)
+  cci_dashboard$category <- factor(cci_dashboard$category)
+  cci_dashboard$stat <- factor(cci_dashboard$stat)
+  cci_dashboard$base <- factor(cci_dashboard$base)
+  
+  cci_dashboard$value.country <- as.numeric(cci_dashboard$value.country)
+  cci_dashboard$value.region <- as.numeric(cci_dashboard$value.region)
+  cci_dashboard$value.global <- as.numeric(cci_dashboard$value.global)
+  
+  cci_dashboard
+  
+}
+
+
 rank_cci_question <- function(infile,question,rankyear,rankquarter) {
 
-  #question <- "Q7a"
+  #question <- "Q3"
   #rm(infile_Q,temp,question,question_long,order_nm)
   
   infile_Q <- infile[grepl(paste(question,".",sep=""),infile$question),]
@@ -195,11 +281,6 @@ rank_cci <- function(infile,rankyear,rankquarter) {
   infile<- rank_cci_question(infile,"Q6",rankyear,rankquarter)
   infile<- rank_cci_question(infile,"Q7a",rankyear,rankquarter)
   infile<- rank_cci_question(infile,"Q7b",rankyear,rankquarter)
-  infile<- rank_cci_question(infile,"Q3",rankyear,rankquarter)
-  infile<- rank_cci_question(infile,"Q4",rankyear,rankquarter)
-  infile<- rank_cci_question(infile,"Q5",rankyear,rankquarter)
-  infile<- rank_cci_question(infile,"Q8",rankyear,rankquarter)
-  infile<- rank_cci_question(infile,"Q9",rankyear,rankquarter)
   
   rankname <- paste("rank",rankyear,rankquarter,sep="")
   
@@ -211,7 +292,35 @@ rank_cci <- function(infile,rankyear,rankquarter) {
   infile
   
 }
+
+rank_cci_dashboard <- function(infile,rankyear,rankquarter) {
   
+  #infile <- cci_dashboard; rankyear <- "2015"; rankquarter <- "Q3"
+  #rm(infile,rankquarter,rankyear,rankname)
+  
+  infile<- rank_cci_question(infile,"Q6",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q7a",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q7b",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q19a",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q19b",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q19c",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q16","2011","Q3")
+  
+  rankname <- paste("rank",rankyear,rankquarter,sep="")
+  
+  infile[,rankname] <- NA
+  infile[!is.na(infile$orderQ6),rankname] <- infile[!is.na(infile$orderQ6),"orderQ6"]
+  infile[!is.na(infile$orderQ7a),rankname] <- infile[!is.na(infile$orderQ7a),"orderQ7a"]
+  infile[!is.na(infile$orderQ7b),rankname] <- infile[!is.na(infile$orderQ7b),"orderQ7b"]
+  infile[!is.na(infile$orderQ19a),rankname] <- infile[!is.na(infile$orderQ19a),"orderQ19a"]
+  infile[!is.na(infile$orderQ19b),rankname] <- infile[!is.na(infile$orderQ19b),"orderQ19b"]
+  infile[!is.na(infile$orderQ19c),rankname] <- infile[!is.na(infile$orderQ19c),"orderQ19c"]
+  infile[!is.na(infile$orderQ16),rankname] <- infile[!is.na(infile$orderQ16),"orderQ16"]
+  
+  infile
+  
+}
+
 setup_CCI_EIU <- function() {
 
   cci_eiu_Out2 <- cci_eiu_prepData(cciOutTOTAL,eiuFile)
@@ -230,12 +339,6 @@ setup_CCI_EIU <- function() {
   
   write.csv(cci_eiu_smart,paste(datain,"/Files OUTPUT/cci_eiu_csuite.csv",sep=""),row.names=F)
 
-  cci_dashboard <- cci_eiu_smart[cci_eiu_smart$category=="CCI" & cci_eiu_smart$region=="AP"
-                                 ,c("year","quarter","country","question","question_sub","response",
-                                    "value.country","value.region","rank2015Q3")]
-
-  write.csv(cci_dashboard,paste(datain,"/Files OUTPUT/cci_dashboard.csv",sep=""),row.names=F)
-  
   cci_eiu_smart
   
 }
@@ -275,5 +378,33 @@ setup_CCI_EIU_WB <- function() {
   
   
   cci_eiu_wb
+  
+}
+
+setup_CCI_DASHBOARD <- function() {
+  
+  cci_dashboard <- create_cci_dashboard(cci_eiu_Out2)
+  #summary(factor(substring(cci_dashboard$question,1,4)))
+
+  #write.csv(cci_dashboard,paste(datain,"/Files OUTPUT/cci_dashboard_test.csv",sep=""),row.names=F)
+  
+  #cci_dashboard_backup <- cci_dashboard
+  #cci_dashboard <- cci_dashboard_backup
+  
+  cci_dashboard <- rank_cci_dashboard(cci_dashboard,"2015","Q3")
+  
+  cci_dashboard <- cci_dashboard[cci_dashboard$region=="AP",]
+  
+  cci_dashboard <- cci_dashboard[c("year","quarter","country","category",
+                                   "question","question_sub","response",
+                                   "value.country","value.region","rank2015Q3")]
+  
+  cci_dashboard <- cci_dashboard[,c("year","quarter","country","category",
+                                    "question","question_sub","response",
+                                    "value.country","value.region","rank2015Q3")]
+  
+  write.csv(cci_dashboard,paste(datain,"/Files OUTPUT/cci_dashboard.csv",sep=""),row.names=F)
+  
+  cci_dashboard
   
 }
