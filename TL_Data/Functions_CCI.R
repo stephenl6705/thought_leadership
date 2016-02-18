@@ -9,11 +9,11 @@ addCol <- function(infile,name,value) {
 
 rd_CCI <- function(filename,subdir,nrRows,nrCols) {
   
-  #filename <- "Q1 2011 CCI - Regional Results.xls"; nrRows <- 10000; nrCols <- 62; subdir <- "REGION"
+  #filename <- "Q4 2015 CCI RESULTS BY COUNTRY.xls"; nrRows <- 10000; nrCols <- 62; subdir <- "GLOBAL"
   #rm(filename,subdir,infile,dataIn,rowstart,rowend,jobnr,date,table,base,question,question_sub,r,nrRows,nrCols,sheets,sheetNr,category);
   
   setwd(paste(datain,"/Files CCI/",subdir,sep=""))
-  
+  getwd()
   dataIn <- loadWorkbook(filename)
   
   sheets <- getSheets(dataIn)
@@ -133,7 +133,7 @@ getFileSEA <- function(year,quarter) {
   
   fileOut <- ""; subdir <- "SEA"
   
-  if ((year==2014 & quarter==4)|(year==2015 & quarter==2)|(year==2015 & quarter==3)) {
+  if ((year==2014 & quarter==4)|(year==2015 & quarter==2)|(year==2015 & quarter==3) {
     fileOut <- paste("Q",quarter," ",year," CCI ",subdir," REGION.xls",sep="")
   }
   
@@ -146,6 +146,8 @@ getFileGLOBAL <- function(year,quarter) {
   
   if (year==2015 & quarter==3) {
     fileOut <- "Q3 2015 CCI RESULTS BY COUNTRY with Morocco.xls"
+  } else if (year==2015 & quarter==4) {
+    fileOut <- "Q4 2015 CCI RESULTS BY COUNTRY_REVISED 24Dec15.xls"
   } else if (year==2011 & quarter==1) {
     fileOut <- paste("Q",quarter," ",year," CCI - RESULTS BY COUNTRY.xls",sep="")
   } else if (year==2012 & quarter==1) {
@@ -165,6 +167,8 @@ getFileREGION <- function(year,quarter) {
   
   if (year==2015 & quarter==3) {
     fileOut <- "Q3 2015 CCI RESULTS BY REGION with Morocco.xls"
+  } else if (year==2015 & quarter==4) {
+    fileOut <- "Q4 2015 CCI RESULTS BY REGION_REVISED 24Dec15.xls"
   } else if (year==2011 & quarter==1) {
     fileOut <- "Q1 2011 CCI - Regional Results.xls"
   } else if (year==2012 & quarter==3) {
@@ -177,17 +181,17 @@ getFileREGION <- function(year,quarter) {
 }
 
 downloadCCI <- function(subdir,read=F) {
-  #subdir <- "AP"; read <- T
+  #subdir <- "GLOBAL"; read <- F
   #rm(subdir,read,cciOut,y,q,fileOut,fileURL,bindat,temp)
   setwd(paste(datain,"/Files CCI/",subdir,sep=""))
   cciOut <- ""
   nrRows <- 10000; nrCols <- 62
   for (y in 2011:2015) {
-    #y <- 2013
+    y <- 2015
     for (q in 1:4) {
-      #q <- 3
+      q <- 4
       fileOut <- ""
-      if (!(y==2015 & q==4)) {
+      #if (!(y==2015 & q==4)) {
         if (subdir == "AP") {
           fileOut <- getFileAP(y,q)
         } else if (subdir == "SEA") {
@@ -210,12 +214,35 @@ downloadCCI <- function(subdir,read=F) {
             cciOut <- temp
           }
         }
-      }
+      #}
     }
   }
   cciOut$region <- subdir
   cciOut <- cciOut[c(ncol(cciOut),1:ncol(cciOut)-1)]
   cciOut
+}
+
+downloadCCI_yq <- function(subdir,read=F, y, q) {
+  #subdir <- "GLOBAL"; read <- F; y <- 2015; q <- 4
+  #rm(subdir,read,cciOut,y,q,fileOut,fileURL,bindat,temp)
+  setwd(paste(datain,"/Files CCI/",subdir,sep=""))
+  cciOut <- ""
+  nrRows <- 10000; nrCols <- 62
+  fileOut <- ""
+  if (subdir == "AP") {
+    fileOut <- getFileAP(y,q)
+  } else if (subdir == "SEA") {
+    fileOut <- getFileSEA(y,q)
+  } else if (subdir == "REGION") {
+    fileOut <- getFileREGION(y,q)
+  } else {
+    fileOut <- getFileGLOBAL(y,q)
+  }
+
+  fileURL <- paste(fileCCIRoot,gsub(" ", "%20", fileOut),sep="")
+  bindat <- getBinaryURL(fileURL,userpwd=paste(userId,":",passWd,sep=""))
+  writeBin(bindat,fileOut)
+
 }
 
 formatCols <- function() {
@@ -254,21 +281,28 @@ formatCols <- function() {
 setupCCI <- function() {
   
   fileCCIRoot <- "https://intranet.nielsen.com/company/news/newsletters/Consumer%20Confidence%20Concerns%20and%20Spending%20Library/"
+
+  downloadCCI_yq("AP",read=F,y = 2015,q = 4)
+  downloadCCI_yq("SEA",read=F,y = 2015,q = 4)
+  # NOTE: FILES ARE IN XLSX FORMAT, SO DOES NOT DOWNLOAD AUTOMATICALLY
+  downloadCCI_yq("GLOBAL",read=F,y = 2015,q = 4)
+  downloadCCI_yq("REGION",read=F,y = 2015,q = 4)
   
   cciOutAP <- downloadCCI("AP",read=F)
   cciOutSEA <- downloadCCI("SEA",read=F)
   cciOutGLOBAL <- downloadCCI("GLOBAL",read=F)
+  cciOutREGION <- downloadCCI("REGION",read=F)
+  
   cciOutAP <- downloadCCI("AP",read=T)
   cciOutSEA <- downloadCCI("SEA",read=T)
   cciOutGLOBAL <- downloadCCI("GLOBAL",read=T)
+  cciOutREGION <- downloadCCI("REGION",read=T)
   cciOut <- rbind.fill(cciOutAP,cciOutSEA,cciOutGLOBAL)
   cciOut[grepl("index by",cciOut$question_sub),"question_sub"] <- "None"
   
   #nrow(cciOut)
   #write.csv(cciOut,paste(datain,"/Files OUTPUT/cciOut.csv",sep=""),row.names=F)
   
-  cciOutREGION <- downloadCCI("REGION",read=F)
-  cciOutREGION <- downloadCCI("REGION",read=T)
   #nrow(cciOutREGION)
   #dupes <- duplicated(cciOutREGION[,c("region","year","quarter","category","question","question_sub","Response","base","date")])
   #nrow(cciOutREGION[dupes,])
