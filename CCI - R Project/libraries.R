@@ -11,7 +11,6 @@ library(grid)
 library(gridExtra)
 
 library(RCurl)
-library(plyr)
 
 library(reshape)
 library(reshape2)

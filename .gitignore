@@ -14,3 +14,4 @@ Files CCI/*
 *.docx
 *.pdf
 *.pptx
+.Rproj.user

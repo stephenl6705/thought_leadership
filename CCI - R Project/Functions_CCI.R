@@ -297,7 +297,8 @@ setupCCI <- function() {
   cciOutSEA <- downloadCCI("SEA",read=T)
   cciOutGLOBAL <- downloadCCI("GLOBAL",read=T)
   cciOutREGION <- downloadCCI("REGION",read=T)
-  cciOut <- rbind.fill(cciOutAP,cciOutSEA,cciOutGLOBAL)
+  #cciOut <- rbind.fill(cciOutAP,cciOutSEA,cciOutGLOBAL)
+  cciOut <- cciOutGLOBAL
   cciOut[grepl("index by",cciOut$question_sub),"question_sub"] <- "None"
   
   #nrow(cciOut)
