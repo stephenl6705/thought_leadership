@@ -1,6 +1,4 @@
-*.xls
 *.Rproj*
-*.xlsx
 *.csv
 .RData
 .Rhistory
