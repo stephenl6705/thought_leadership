@@ -4,7 +4,7 @@
 
 eiu_readData <- function(period) {
 
-  #period <- "2015_12_03_Q"
+  #period <- "2016_08_11_Y"
   #rm(period,dataIn,infile,lastRow)
   
   setwd(paste(datain,"/Files EIU/",sep=""))
@@ -12,7 +12,7 @@ eiu_readData <- function(period) {
   dataIn <- loadWorkbook(paste("eiu_",period,".xls",sep=""))
   
   infile = readWorksheet(dataIn, sheet = getSheets(dataIn)[1],useCachedValues=FALSE,
-                         startRow=4, endRow=10000, startCol=1, endCol=102, header=T)
+                         startRow=4, endRow=15000, startCol=1, endCol=102, header=T)
   names(infile)[4] <- "Series"
   infile <- infile[!is.na(infile$Series),]
   lastRow <- as.numeric(row.names(infile[infile$Series=="Notes",])) - 1
@@ -48,17 +48,21 @@ eiu_readData <- function(period) {
   
 }
 
-setupEIU <- function() {
+setupEIU <- function(period="2016_Q3") {
 
-  eiuFileQ <- eiu_readData("2015_12_03_Q")
+  #period <- "2016_Q2"
+  #rm(period)
+  
+  eiuFileQ <- eiu_readData(paste0(period,"_Q"))
   write.csv(eiuFileQ,paste(datain,"/Files OUTPUT/eiuOut_Q.csv",sep=""),row.names=F)
   
-  eiuFileY <- eiu_readData("2015_12_03_Y")
+  eiuFileY <- eiu_readData(paste0(period,"_Y"))
   write.csv(eiuFileY,paste(datain,"/Files OUTPUT/eiuOut_Y.csv",sep=""),row.names=F)
   
   eiuFile <- rbind.fill(eiuFileQ,eiuFileY)
   write.csv(eiuFile,paste(datain,"/Files OUTPUT/eiuOut.csv",sep=""),row.names=F)
   
+  eiuFile
   
 }
 

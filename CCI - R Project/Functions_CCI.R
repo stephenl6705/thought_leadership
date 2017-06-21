@@ -9,7 +9,7 @@ addCol <- function(infile,name,value) {
 
 rd_CCI <- function(filename,subdir,nrRows,nrCols) {
   
-  #filename <- "Q4 2015 CCI RESULTS BY COUNTRY.xls"; nrRows <- 10000; nrCols <- 62; subdir <- "GLOBAL"
+  #filename <- "Q4 2015 CCI AP REGION.xls"; nrRows <- 10000; nrCols <- 62; subdir <- "AP"
   #rm(filename,subdir,infile,dataIn,rowstart,rowend,jobnr,date,table,base,question,question_sub,r,nrRows,nrCols,sheets,sheetNr,category);
   
   setwd(paste(datain,"/Files CCI/",subdir,sep=""))
@@ -43,7 +43,7 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
     infile = readWorksheet(dataIn, sheet = sheets[sheetNr],useCachedValues=FALSE,
                            startRow=1, endRow=nrRows, startCol=1, endCol=nrCols, header=F)
     infile <- infile[!is.na(infile$Col2),]
-    rowend <- as.numeric(rows[length(rownames(infile))])
+    rowend <- as.numeric(rownames(infile)[length(rownames(infile))])
     infile <- infile[grepl("Total",infile$Col2)|grepl("Global.Avg",infile$Col2),]
     rowstart <- as.numeric(rownames(infile[1,]))
     infile = readWorksheet(dataIn, sheet = sheets[sheetNr],useCachedValues=FALSE,
@@ -56,6 +56,7 @@ rd_CCI <- function(filename,subdir,nrRows,nrCols) {
     names(infile)[names(infile)=="Singapore..SG."] <- "SG"
     names(infile)[names(infile)=="Thailand..TH."] <- "TH"
     names(infile)[names(infile)=="Vietnam..VN."] <- "VN"
+    names(infile)[names(infile)=="PERU"] <- "PE"
     infile <- infile[,names(infile)[!grepl("Col",names(infile))]]
     infile <- infile[!is.na(infile$Response),]
     
@@ -133,7 +134,7 @@ getFileSEA <- function(year,quarter) {
   
   fileOut <- ""; subdir <- "SEA"
   
-  if ((year==2014 & quarter==4)|(year==2015 & quarter==2)|(year==2015 & quarter==3) {
+  if ((year==2014 & quarter==4)|(year==2015 & quarter==2)|(year==2015 & quarter==3)) {
     fileOut <- paste("Q",quarter," ",year," CCI ",subdir," REGION.xls",sep="")
   }
   
@@ -154,6 +155,12 @@ getFileGLOBAL <- function(year,quarter) {
     fileOut <- paste("Q",quarter," ",year," CCI RESLUTS BY COUNTRY.xls",sep="")
   } else if (year==2012 & quarter==3) {
     fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY COUNTRY REVISED FOR FF Q21.xls",sep="")
+  } else if (year==2016 & quarter==1) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY COUNTRY 2.xls",sep="")
+  } else if (year==2016 & quarter==2) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY COUNTRY - WITH CHINA.xls",sep="")
+  } else if (year==2016 & quarter==3) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY COUNTRY CCI.xls",sep="")
   } else {
     fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY COUNTRY.xls",sep="")
   }
@@ -173,6 +180,12 @@ getFileREGION <- function(year,quarter) {
     fileOut <- "Q1 2011 CCI - Regional Results.xls"
   } else if (year==2012 & quarter==3) {
     fileOut <- "Q3 2012 CCI RESULTS BY REGION REVISED FOR FF Q21.xls"
+  } else if (year==2016 & quarter==1) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY REGION 2.xls",sep="")
+  } else if (year==2016 & quarter==2) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY REGION - WITH CHINA.xls",sep="")
+  } else if (year==2016 & quarter==3) {
+    fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY REGION CCI.xls",sep="")
   } else {
     fileOut <- paste("Q",quarter," ",year," CCI RESULTS BY REGION.xls",sep="")
   }
@@ -181,17 +194,17 @@ getFileREGION <- function(year,quarter) {
 }
 
 downloadCCI <- function(subdir,read=F) {
-  #subdir <- "GLOBAL"; read <- F
+  #subdir <- "AP"; read <- T
   #rm(subdir,read,cciOut,y,q,fileOut,fileURL,bindat,temp)
   setwd(paste(datain,"/Files CCI/",subdir,sep=""))
   cciOut <- ""
-  nrRows <- 10000; nrCols <- 62
-  for (y in 2011:2015) {
-    y <- 2015
+  nrRows <- 10000; nrCols <- 65
+  for (y in 2011:2017) {
+    #y <- 2015
     for (q in 1:4) {
-      q <- 4
+      #q <- 4
       fileOut <- ""
-      #if (!(y==2015 & q==4)) {
+      if (!(y==2017 & q %in% c(2,3,4) )) {
         if (subdir == "AP") {
           fileOut <- getFileAP(y,q)
         } else if (subdir == "SEA") {
@@ -214,7 +227,7 @@ downloadCCI <- function(subdir,read=F) {
             cciOut <- temp
           }
         }
-      #}
+      }
     }
   }
   cciOut$region <- subdir
@@ -223,11 +236,14 @@ downloadCCI <- function(subdir,read=F) {
 }
 
 downloadCCI_yq <- function(subdir,read=F, y, q) {
-  #subdir <- "GLOBAL"; read <- F; y <- 2015; q <- 4
+  #subdir <- "GLOBAL"; read <- F; y <- 2016; q <- 2
   #rm(subdir,read,cciOut,y,q,fileOut,fileURL,bindat,temp)
-  setwd(paste(datain,"/Files CCI/",subdir,sep=""))
+  #Q2 2016 CCI RESULTS BY COUNTRY - WITH CHINA.xls
+  #Q2 2016 CCI RESULTS BY COUNTRY.xls
+  
+  setwd(paste0(datain,"/Files CCI/",subdir))
   cciOut <- ""
-  nrRows <- 10000; nrCols <- 62
+  nrRows <- 10000; nrCols <- 65
   fileOut <- ""
   if (subdir == "AP") {
     fileOut <- getFileAP(y,q)
@@ -278,25 +294,33 @@ formatCols <- function() {
   
 }
 
-setupCCI <- function() {
-  
-  fileCCIRoot <- "https://intranet.nielsen.com/company/news/newsletters/Consumer%20Confidence%20Concerns%20and%20Spending%20Library/"
+setupCCI <- function(download=FALSE, year=2016, quarter=3) {
 
-  downloadCCI_yq("AP",read=F,y = 2015,q = 4)
-  downloadCCI_yq("SEA",read=F,y = 2015,q = 4)
+  #download = FALSE; year = 2016; quarter=3 
+  #rm(download, year, quarter)
+  
   # NOTE: FILES ARE IN XLSX FORMAT, SO DOES NOT DOWNLOAD AUTOMATICALLY
-  downloadCCI_yq("GLOBAL",read=F,y = 2015,q = 4)
-  downloadCCI_yq("REGION",read=F,y = 2015,q = 4)
   
-  cciOutAP <- downloadCCI("AP",read=F)
-  cciOutSEA <- downloadCCI("SEA",read=F)
-  cciOutGLOBAL <- downloadCCI("GLOBAL",read=F)
-  cciOutREGION <- downloadCCI("REGION",read=F)
+  if (download) {
+    downloadCCI_yq("GLOBAL",read=F,y = year,q = quarter)
+    downloadCCI_yq("REGION",read=F,y = year,q = quarter)
+  }
   
-  cciOutAP <- downloadCCI("AP",read=T)
-  cciOutSEA <- downloadCCI("SEA",read=T)
+  #cciOutAP <- downloadCCI("AP",read=F)
+  #cciOutSEA <- downloadCCI("SEA",read=F)
+  #cciOutGLOBAL <- downloadCCI("GLOBAL",read=F)
+  #cciOutREGION <- downloadCCI("REGION",read=F)
+  
+  #cciOutAP <- downloadCCI("AP",read=T)
+  #cciOutSEA <- downloadCCI("SEA",read=T)
   cciOutGLOBAL <- downloadCCI("GLOBAL",read=T)
   cciOutREGION <- downloadCCI("REGION",read=T)
+  #str(cciOutGLOBAL)
+  #str(cciOutREGION)
+  
+  write.csv(cciOutGLOBAL,paste(datain,"/Files OUTPUT/cciOutGLOBAL.csv",sep=""),row.names=F)
+  write.csv(cciOutREGION,paste(datain,"/Files OUTPUT/cciOutREGION.csv",sep=""),row.names=F)
+  
   #cciOut <- rbind.fill(cciOutAP,cciOutSEA,cciOutGLOBAL)
   cciOut <- cciOutGLOBAL
   cciOut[grepl("index by",cciOut$question_sub),"question_sub"] <- "None"
@@ -319,24 +343,30 @@ setupCCI <- function() {
   cciOut[grepl("by country",cciOut$question_sub),"question_sub"] <- "None"
   cciOutREGION[grepl("by region",cciOutREGION$question_sub),"question_sub"] <- "None"
   
-  cciOutTOTAL <- merge(cciOut,cciOutREGION,by=c("year","quarter","category","question","question_sub","Response","base"),all.x=TRUE)
+  cciOut <- merge(cciOut,cciOutREGION,by=c("year","quarter","category","question","question_sub","Response","base"),all.x=TRUE)
   #nrow(cciOutTOTAL)
+  #str(cciOut)
+  cciOut <- addCol(cciOut,"stat","Response")
+  cciOut <- cciOut[c(2:6,1,7:length(cciOut))]
+  cciOut[grepl("^BASE",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^SUM$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^S.D.$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^SE$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^TOP 2 BOX$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^BOTTOM 2 BOX$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^MEAN$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^TOTAL$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^MEDIAN$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^SD$",toupper(cciOut$Response)),"stat"] <- "summary"
+  cciOut[grepl("^AVG$",toupper(cciOut$Response)),"stat"] <- "summary"
   
-  cciOutTOTAL <- addCol(cciOutTOTAL,"stat","Response")
-  cciOutTOTAL <- cciOutTOTAL[c(2:6,1,7:length(cciOutTOTAL))]
-  cciOutTOTAL[grepl("^BASE",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^SUM$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^S.D.$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^SE$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^TOP 2 BOX$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^BOTTOM 2 BOX$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^MEAN$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^TOTAL$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^MEDIAN$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^SD$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
-  cciOutTOTAL[grepl("^AVG$",toupper(cciOutTOTAL$Response)),"stat"] <- "summary"
+  write.csv(cciOut,paste(datain,"/Files OUTPUT/cciOutTOTAL.csv",sep=""),row.names=F)
   
-  write.csv(cciOutTOTAL,paste(datain,"/Files OUTPUT/cciOutTOTAL.csv",sep=""),row.names=F)
+  cciOut
+  
+}
+
+sampleCCI <- function() {
   
   cciOutTOTAL_sample <- cciOutTOTAL[c("region.x","stat","year","quarter","question","question_sub","Response",
                                       "AU","CN","HK","IN","ID","KO","MY","NZ","PH","SG","TW","TH","VN","JP","AP")]
@@ -349,7 +379,7 @@ setupCCI <- function() {
   
   cciOutTOTAL_sample <- cciOutTOTAL_sample[c("year","quarter","question","question_sub","Response",
                                              "AU","CN","HK","IN","ID","KO","MY","NZ","PH","SG","TW","TH","VN","JP","AP region")]
-
+  
   str(cciOutTOTAL_sample)
   cciOutTOTAL_sample <- melt(cciOutTOTAL_sample,
                        id.vars = c("year","quarter","question","question_sub","Response"),
@@ -361,9 +391,9 @@ setupCCI <- function() {
   cciOutTOTAL_sample$value <- gsub("%","",x = cciOutTOTAL_sample$value)
   cciOutTOTAL_sample$value <- as.numeric(cciOutTOTAL_sample$value)
   
-  #cciOutTOTAL_sample[cciOutTOTAL_sample$question=="Index. CONSUMER CONFIDENCE INDEX","value"] <-
-  #  cciOutTOTAL_sample[cciOutTOTAL_sample$question=="Index. CONSUMER CONFIDENCE INDEX","value"]/100
+  cciOutTOTAL_sample[cciOutTOTAL_sample$question=="Index. CONSUMER CONFIDENCE INDEX","value"] <-
+    cciOutTOTAL_sample[cciOutTOTAL_sample$question=="Index. CONSUMER CONFIDENCE INDEX","value"]/100
   
   write.csv(cciOutTOTAL_sample,paste(datain,"/Files OUTPUT/cciOutTOTAL_sample.csv",sep=""),row.names=F)
-
+  
 }

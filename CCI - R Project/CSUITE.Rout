@@ -1,0 +1,53 @@
+
+R version 3.3.1 (2016-06-21) -- "Bug in Your Hair"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-redhat-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #!/usr/bin/env Rscript
+> 
+> #save(cci_eiu_csuite, file = "cci_eiu_csuite.RData")
+> #save(cci_eiu_Out2, file = "cci_eiu_Out2.RData")
+> #save(cci_eiu_smart, file = "cci_eiu_smart.RData")
+> #save(CCIgroupByDateCountry, file = "CCIgroupByDateCountry.RData")
+> #save(cciOut, file = "cciOut.RData")
+> #save(cciOutAP, file = "cciOutAP.RData")
+> #save(cciOutGLOBAL, file = "cciOutGLOBAL.RData")
+> #save(cciOutREGION, file = "cciOutREGION.RData")
+> #save(cciOutSEA, file = "cciOutSEA.RData")
+> #save(cciOutTOTAL, file = "cciOutTOTAL.RData")
+> #save(eiuFile, file = "eiuFile.RData")
+> #save(eiuFileQ, file = "eiuFileQ.RData")
+> #save(eiuFileY, file = "eiuFileY.RData")
+> #save(long_CCI, file = "long_CCI.RData")
+> 
+> #rm(cci_eiu_csuite,cci_eiu_Out2,cci_eiu_smart,
+> #   CCIgroupByDateCountry,
+> #   cciOut,cciOutAP,cciOutGLOBAL,cciOutREGION,cciOutSEA,cciOutTOTAL,
+> #   eiuFile,eiuFileQ,eiuFileY,
+> #   long_CCI)
+> 
+> args = commandArgs(trailingOnly=TRUE)
+> 
+> if (length(args)<=1) {
++   stop("\nTwo arguments must be supplied including year (e.g. 2016) + quarter (e.g 2)\nThird argument is e.g. 2016_Q2\n", call.=FALSE)
++ } else if (length(args)==2) {
++   args[3] = paste0(args[1],"_Q",args[2])
++ }
+Error: 
+Two arguments must be supplied including year (e.g. 2016) + quarter (e.g 2)
+Third argument is e.g. 2016_Q2
+Execution halted

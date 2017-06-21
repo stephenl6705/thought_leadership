@@ -3,9 +3,9 @@
 
 cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
 
-  #cciInputFile <- cciOutTOTAL; eiuInputFile <- eiuFile
+  #cciInputFile <- cciOut; eiuInputFile <- eiuFile
   #rm(cciInputFile,eiuInputFile,dupes,cci_eiu_Out,cci_eiu_Out2)
-  
+
   cciInputFile[cciInputFile$region.x=="GLOBAL","region.x"] <- "1.GLOBAL"
   cciInputFile[cciInputFile$region.x=="AP","region.x"] <- "2.AP"
   cciInputFile[cciInputFile$region.x=="SEA","region.x"] <- "3.SEA"
@@ -65,7 +65,7 @@ cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
   cci_eiu_Out2[cci_eiu_Out2$country %in%
                  c("AT","BE","CH","CZ","DE","DK","EE","ES","FI","FR","GB","GR","HR","HU",
                    "IE","IL","IT","LT","LV","NL","NO","PL","PT","RO","RU","SE","TR","UA",
-                   "BG","SK","RS","SI"),"region"] <- "EU"
+                   "BG","SK","RS","SI","BL"),"region"] <- "EU"
   
   cci_eiu_Out2[cci_eiu_Out2$country %in%
                  c("ZA","AE","EG","PK","SA","MO"),"region"] <- "AME"
@@ -107,6 +107,8 @@ cci_eiu_prepData <- function(cciInputFile,eiuInputFile) {
 
 create_cci_eiu_smart <- function(infile) {
 
+  #infile = cci_eiu_Out2
+  
   cci_eiu_smart <- infile[
     (
       infile$question=="DCPI" | infile$question=="DGDP" | infile$response =="Average Index" |
@@ -116,7 +118,7 @@ create_cci_eiu_smart <- function(infile) {
     )
     &
       (
-        infile$year %in% c("2011","2012","2013","2014","2015") &
+        infile$year %in% c("2011","2012","2013","2014","2015","2016","2017") &
           infile$stat=="Response"
       )
     ,]
@@ -239,7 +241,7 @@ rank_cci_question <- function(infile,question,rankyear,rankquarter) {
   infile_Q <- infile[grepl(paste(question,".",sep=""),infile$question),]
   infile_Q <- infile_Q[infile_Q$year==rankyear & infile_Q$quarter==rankquarter,]
   question_long <- infile_Q[1,"question"]
-  head(infile_Q)
+
   infile_Q <- ftime_agg(infile_Q,
                                 agg_list = infile_Q$value.region,
                                 order_list = list(infile_Q$region,infile_Q$response),
@@ -276,12 +278,13 @@ rank_cci_question <- function(infile,question,rankyear,rankquarter) {
 
 rank_cci <- function(infile,rankyear,rankquarter) {
   
-  #infile <- cci_eiu_smart; rankyear <- "2015"; rankquarter <- "Q4"
+  #infile <- cci_eiu_smart; rankyear <- "2016"; rankquarter <- "Q3"
   #rm(infile,rankquarter,rankyear,rankname)
   
   infile<- rank_cci_question(infile,"Q6",rankyear,rankquarter)
   infile<- rank_cci_question(infile,"Q7a",rankyear,rankquarter)
   infile<- rank_cci_question(infile,"Q7b",rankyear,rankquarter)
+  infile<- rank_cci_question(infile,"Q7",rankyear,rankquarter)
   
   rankname <- paste("rank",rankyear,rankquarter,sep="")
   
@@ -289,6 +292,7 @@ rank_cci <- function(infile,rankyear,rankquarter) {
   infile[!is.na(infile$orderQ6),rankname] <- infile[!is.na(infile$orderQ6),"orderQ6"]
   infile[!is.na(infile$orderQ7a),rankname] <- infile[!is.na(infile$orderQ7a),"orderQ7a"]
   infile[!is.na(infile$orderQ7b),rankname] <- infile[!is.na(infile$orderQ7b),"orderQ7b"]
+  infile[!is.na(infile$orderQ7),rankname] <- infile[!is.na(infile$orderQ7),"orderQ7"]
   
   infile
   
@@ -322,24 +326,67 @@ rank_cci_dashboard <- function(infile,rankyear,rankquarter) {
   
 }
 
-setup_CCI_EIU <- function() {
-
-  cci_eiu_Out2 <- cci_eiu_prepData(cciOutTOTAL,eiuFile)
+aggregate_Q7 <- function(infile) {
   
-  #write.csv(cci_eiu_Out2,paste(datain,"/Files OUTPUT/cci_eiu_Out2.csv",sep=""),row.names=F)
+  infile$year <- as.character(infile$year)
+  infile$quarter <- as.character(infile$quarter)
+  infile$region <- as.character(infile$region)
+  infile$country <- as.character(infile$country)
+  infile$category <- as.character(infile$category)
+  infile$question <- as.character(infile$question)
+  infile$stat <- as.character(infile$stat)
+  infile$base <- as.character(infile$base)
+  
+  infile_Q7 <- infile[grepl(paste("Q7[ab]",".",sep=""),infile$question),]
+  infile_Q7$question <-
+    "Q7. What is your (second) biggest concern over the next six months?"
+  infile_Q7$base <- "Base: All respondents"
+  infile_Q7[is.na(infile_Q7)] <- 0
+  infile_Q7 <-
+    infile_Q7 %>% group_by(year, quarter, region, country, category, question,
+                           question_sub, stat, response, base) %>%
+    summarise_each(funs(sum))
+  infile_Q7 <- as.data.frame(infile_Q7)
+  infile_Q7[is.na(infile_Q7)] <- 0
+  infile <- rbind(infile,infile_Q7)
+  infile$year <- as.factor(infile$year)
+  infile$quarter <- as.factor(infile$quarter)
+  infile$region <- as.factor(infile$region)
+  infile$country <- as.factor(infile$country)
+  infile$category <- as.factor(infile$category)
+  infile$question <- as.factor(infile$question)
+  infile$stat <- as.factor(infile$stat)
+  infile$base <- as.factor(infile$base)
+  infile
+  
+}
+
+setup_CCI_EIU <- function(fileCCI, fileEIU, year="2016", quarter="Q2") {
+
+  #fileCCI=cciOutTOTAL;fileEIU=eiuFile;year="2017";quarter="Q1"
+  #rm(fileCCI,fileEIU,cci_eiu_Out2,cci_eiu_smart,cci_eiu_csuite,year,quarter)
+  
+  cci_eiu_Out2 <- cci_eiu_prepData(fileCCI,fileEIU)
+  #summary(factor(cci_eiu_Out2$year))
+  #summary(as.factor(eiuFile$jobnr.x))
   
   cci_eiu_smart <- create_cci_eiu_smart(cci_eiu_Out2)
-  summary(factor(cci_eiu_smart$question))
+  #summary(factor(cci_eiu_smart$year))
+  #head(cci_eiu_smart[cci_eiu_smart$year==year & cci_eiu_smart$quarter=="Q2",])
   
-  #cci_eiu_smart <- rank_cci(cci_eiu_smart,"2015","Q2")
-  cci_eiu_csuite <- rank_cci(cci_eiu_smart,"2015","Q4")
+  cci_eiu_csuite <- aggregate_Q7(cci_eiu_smart)
+  #summary(factor(cci_eiu_csuite$year))
+  
+  #cci_eiu_smart <- rank_cci(cci_eiu_csuite,"2015","Q2")
+  cci_eiu_csuite <- rank_cci(cci_eiu_csuite,year,quarter)
   
   cci_eiu_csuite <- cci_eiu_csuite[c("year","quarter","region","country","category",
                                      "question","question_sub","stat","response","base",
                                      "value.country","value.region","value.global",
-                                     "rank2015Q4")]
+                                     paste0("rank",year,quarter)
+                                     )]
   
-  write.csv(cci_eiu_csuite,paste(datain,"/Files OUTPUT/cci_eiu_csuite_2015_Q4.csv",sep=""),row.names=F)
+  write.csv(cci_eiu_csuite,paste0(datain,paste0("/Files OUTPUT/cci_eiu_csuite_",year,"_",quarter,".csv")),row.names=F)
 
   cci_eiu_csuite
   
